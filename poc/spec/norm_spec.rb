@@ -1,11 +1,17 @@
 require 'spec_helper'
 
 describe Norm do
-  before { prepare_spec }
+  around {|example| prepare_spec(example) }
 
   describe ".connect!" do
     before { PG.should_receive(:connect) }
+    before { Norm.disconnect! rescue false }
     it { Norm.connect! }
+  end
+
+  describe ".disconnect!" do
+    before { PG::Connection.any_instance.should_receive(:close) }
+    it { Norm.disconnect! }
   end
 
   describe ".sql" do
@@ -23,6 +29,7 @@ describe Norm do
   describe ".query" do
     subject { Norm.query(:empty) }
     it { should be_an_instance_of Norm::Query }
+    it { should be_frozen }
   end
 
   describe ".format_results" do

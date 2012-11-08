@@ -5,7 +5,13 @@ module Norm
 
   # Connect to the database.
   def self.connect!
-    @conn = PG.connect(:dbname => 'nao_testing')
+    @conn ||= PG.connect(:dbname => 'nao_testing')
+  end
+
+  # Disconnect from the database.
+  def self.disconnect!
+    @conn.close
+    @conn = nil
   end
 
   # Execute the raw SQL +sql+.  The returned object varies depending on the
@@ -22,7 +28,7 @@ module Norm
   # Returns a new Norm::Query object for +table+.
   def self.query(table)
     @queries ||= {}
-    @queries[table] ||= Query.new(@conn, table.to_s)
+    @queries[table] ||= Query.new(@conn, table.to_s).freeze
   end
 
   # Formats the Array of Hashes +results+ according to the column types
