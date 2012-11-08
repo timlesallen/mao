@@ -78,6 +78,14 @@ module Norm::Filter
     Norm::Filter::Binary.new(:op => '<=', :lhs => self, :rhs => rhs)
   end
 
+  # Returns a filter where the current object is checked if it IS NULL.
+  # HACK(arlen): ? Calling this "nil?" results in the world crashing down
+  # around us.  But it seems a pity to have this be not-quite-like-Ruby.  Would
+  # it be better to make #==(nil) map to IS NULL instead of = NULL?
+  def null?
+    Norm::Filter::Binary.new(:op => 'IS', :lhs => self, :rhs => nil)
+  end
+
   class Column
     include Norm::Filter
 

@@ -105,6 +105,15 @@ describe Norm::Filter do
     it { subject.options[:lhs].should be col_x }
     it { subject.options[:rhs].should be col_y }
   end
+
+  describe "#null?" do
+    subject { col_x.null? }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq "IS" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should be_nil }
+  end
 end
 
 describe Norm::Filter::Column do
