@@ -3,14 +3,18 @@ require 'pg'
 module Norm
   require 'norm/query'
 
+  # Connect to the database.
   def self.connect!
     @conn = PG.connect(:dbname => 'nao_testing')
   end
 
+  # Execute the raw SQL +sql+.  The returned object varies depending on the
+  # database vendor.
   def self.sql(sql, &block)
     @conn.exec(sql, &block)
   end
 
+  # Quote +name+ as appropriate for a table name in an SQL statement.
   def self.quote_table(name)
     PG::Connection.quote_ident(name)
   end
@@ -56,3 +60,4 @@ module Norm
   end
 end
 
+# vim: set sw=2 et:

@@ -9,3 +9,5 @@ def prepare_spec
   `psql nao_testing -f #{relative_to_spec("fixture.sql")}`
   Norm.connect!
 end
+
+# vim: set sw=2 et:

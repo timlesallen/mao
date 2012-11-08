@@ -52,3 +52,5 @@ describe Norm do
     end
   end
 end
+
+# vim: set sw=2 et:

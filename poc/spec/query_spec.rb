@@ -21,3 +21,4 @@ describe Norm::Query do
   end
 end
 
+# vim: set sw=2 et:
