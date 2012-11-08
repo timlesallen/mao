@@ -9,12 +9,14 @@ describe Norm do
   end
 
   describe ".sql" do
-    before { PG::Connection.any_instance.should_receive(:exec).with(:x).and_return(:y) }
+    before { PG::Connection.any_instance.should_receive(:exec).
+                 with(:x).and_return(:y) }
     it { Norm.sql(:x).should eq :y }
   end
 
   describe ".quote_table" do
-    before { PG::Connection.should_receive(:quote_ident).with("table").and_return(%Q{"table"}) }
+    before { PG::Connection.should_receive(:quote_ident).
+                 with("table").and_return(%Q{"table"}) }
     it { Norm.quote_table("table").should eq %Q{"table"} }
   end
 
@@ -28,7 +30,8 @@ describe Norm do
                        "japan" => "numeric(10,2)",
                        "china" => "text"} }
 
-    before { Norm.should_receive(:normalize_result).with(:result, col_types).and_return(:moo) }
+    before { Norm.should_receive(:normalize_result).
+                 with(:result, col_types).and_return(:moo) }
 
     it do
       Norm.sql("SELECT * FROM #{Norm.quote_table("typey")}") do |pg_result|
@@ -38,8 +41,10 @@ describe Norm do
   end
 
   describe ".normalize_result" do
-    before { Norm.should_receive(:convert_type).with("y", "zzz").and_return("q") }
-    it { Norm.normalize_result({"x" => "y"}, {"x" => "zzz"}).should eq({:x => "q"}) }
+    before { Norm.should_receive(:convert_type).
+                 with("y", "zzz").and_return("q") }
+    it { Norm.normalize_result({"x" => "y"}, {"x" => "zzz"}).
+             should eq({:x => "q"}) }
   end
 
   describe ".convert_type" do
@@ -48,9 +53,10 @@ describe Norm do
     end
 
     context "character" do
-      it { Norm.convert_type("blah", "character varying(200)").should eq "blah" }
+      it { Norm.convert_type("blah", "character varying(200)").
+               should eq "blah" }
     end
   end
 end
 
-# vim: set sw=2 et:
+# vim: set sw=2 cc=80 et:

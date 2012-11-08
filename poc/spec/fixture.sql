@@ -10,6 +10,13 @@ CREATE TABLE one (
 
 INSERT INTO one (id, value) VALUES (42, 'Hello, Dave.');
 
+DROP TABLE IF EXISTS "some";
+CREATE TABLE "some" (
+  id INT,
+  value VARCHAR(100));
+
+INSERT INTO "some" (id, value) VALUES (1, 'Bah'), (2, 'Hah'), (3, 'Pah');
+
 DROP TABLE IF EXISTS typey;
 CREATE TABLE typey (
   korea BOOLEAN DEFAULT TRUE,

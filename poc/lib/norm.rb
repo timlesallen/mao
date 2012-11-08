@@ -32,7 +32,8 @@ module Norm
     # See: http://deveiate.org/code/pg/PG/Result.html#method-i-ftype
     col_types = {}
     pg_result.nfields.times do |n|
-      @conn.exec("SELECT format_type($1, $2)", [pg_result.ftype(n), pg_result.fmod(n)]) do |res|
+      @conn.exec("SELECT format_type($1, $2)",
+                 [pg_result.ftype(n), pg_result.fmod(n)]) do |res|
         col_types[pg_result.fname(n)] = res.getvalue(0, 0)
       end
     end
@@ -60,4 +61,4 @@ module Norm
   end
 end
 
-# vim: set sw=2 et:
+# vim: set sw=2 cc=80 et:

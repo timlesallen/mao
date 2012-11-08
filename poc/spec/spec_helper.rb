@@ -10,4 +10,4 @@ def prepare_spec
   Norm.connect!
 end
 
-# vim: set sw=2 et:
+# vim: set sw=2 cc=80 et:
