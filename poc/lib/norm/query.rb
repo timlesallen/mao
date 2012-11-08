@@ -7,18 +7,33 @@
 class Norm::Query
   require 'norm/filter'
 
-  def initialize(conn, table, options={})
+  def initialize(conn, table, options={}, col_types=nil)
     @conn, @table, @options = conn, table.freeze, options.freeze
+
+    if !col_types
+      col_types = {}
+      @conn.exec(
+          'SELECT column_name, data_type FROM information_schema.columns ' \
+          'WHERE table_name=$1',
+          [@table]) do |pg_result|
+        pg_result.each do |tuple|
+          col_types[tuple["column_name"].to_sym] = tuple["data_type"]
+        end
+      end
+    end
+
+    @col_types = col_types.freeze
   end
 
   attr_reader :conn
   attr_reader :table
   attr_reader :options
+  attr_reader :col_types
 
   # Returns a new Norm::Query with +options+ merged into the options of this
   # object.
   def with_options(options)
-    self.class.new(@conn, @table, @options.merge(options)).freeze
+    self.class.new(@conn, @table, @options.merge(options), @col_types).freeze
   end
 
   # Restricts the query to at most +n+ results.
@@ -94,7 +109,7 @@ class Norm::Query
   # Executes the constructed query and returns an Array of Hashes of results.
   def execute!
     @conn.exec(sql) do |pg_result|
-      Norm.format_results(pg_result, pg_result)
+      pg_result.map {|result| Norm.normalize_result(result, @col_types)}
     end
   end
 end

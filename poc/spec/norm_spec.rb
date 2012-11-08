@@ -44,25 +44,10 @@ describe Norm do
     it { should be_frozen }
   end
 
-  describe ".format_results" do
-    let(:col_types) { {"korea" => "boolean",
-                       "japan" => "numeric(10,2)",
-                       "china" => "text"} }
-
-    before { Norm.should_receive(:normalize_result).
-                 with(:result, col_types).and_return(:moo) }
-
-    it do
-      Norm.sql("SELECT * FROM #{Norm.quote_ident("typey")}") do |pg_result|
-        Norm.format_results([:result], pg_result)
-      end.should eq [:moo]
-    end
-  end
-
   describe ".normalize_result" do
     before { Norm.should_receive(:convert_type).
                  with("y", "zzz").and_return("q") }
-    it { Norm.normalize_result({"x" => "y"}, {"x" => "zzz"}).
+    it { Norm.normalize_result({"x" => "y"}, {:x => "zzz"}).
              should eq({:x => "q"}) }
   end
 
@@ -72,6 +57,9 @@ describe Norm do
     end
 
     context "character" do
+      it { Norm.convert_type("blah", "character varying").
+               should eq "blah" }
+
       it { Norm.convert_type("blah", "character varying(200)").
                should eq "blah" }
     end

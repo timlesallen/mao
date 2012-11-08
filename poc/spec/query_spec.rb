@@ -8,10 +8,11 @@ describe Norm::Query do
   let(:some) { Norm.query(:some) }
 
   describe ".new" do
-    subject { Norm::Query.new(double("conn"), "table", {}) }
+    subject { Norm::Query.new(double("conn"), "table", {}, {}) }
 
     its(:table) { should be_frozen }
     its(:options) { should be_frozen }
+    its(:col_types) { should be_frozen }
   end
 
   describe "#with_options" do
@@ -66,10 +67,8 @@ describe Norm::Query do
                           '(("id" = \'1\') OR ("id" > \'10000\'))' }
 
     context "non-extant column" do
-      pending "it doesn't do table checks yet" do
-        it { expect { some.where { non_extant_column == 42 }
-                    }.to raise_exception(ArgumentError) }
-      end
+      it { expect { some.where { non_extant_column == 42 }
+                  }.to raise_exception(ArgumentError) }
     end
   end
 
