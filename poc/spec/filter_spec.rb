@@ -43,6 +43,51 @@ describe Norm::Filter do
     it { subject.options[:lhs].should be col_x }
     it { subject.options[:rhs].should be col_y }
   end
+
+  describe "#!=" do
+    subject { col_x != col_y }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq "<>" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should be col_y }
+  end
+
+  describe "#>" do
+    subject { col_x > col_y }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq ">" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should be col_y }
+  end
+
+  describe "#>=" do
+    subject { col_x >= col_y }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq ">=" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should be col_y }
+  end
+
+  describe "#<" do
+    subject { col_x < col_y }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq "<" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should be col_y }
+  end
+
+  describe "#<=" do
+    subject { col_x <= col_y }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq "<=" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should be col_y }
+  end
 end
 
 # vim: set sw=2 cc=80 et:

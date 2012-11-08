@@ -6,7 +6,7 @@ def relative_to_spec(filename)
 end
 
 def prepare_spec(example)
-  `psql nao_testing -f #{relative_to_spec("fixture.sql")}`
+  `psql norm_testing -f #{relative_to_spec("fixture.sql")}`
   Norm.connect!
   example.call
 end

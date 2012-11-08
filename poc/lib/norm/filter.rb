@@ -33,6 +33,36 @@ module Norm::Filter
     Norm::Filter::Binary.new(:op => '=', :lhs => self, :rhs => rhs)
   end
 
+  # Returns an inequality binary filter where the current object is the LHS and
+  # +rhs+ is the RHS.
+  def !=(rhs)
+    Norm::Filter::Binary.new(:op => '<>', :lhs => self, :rhs => rhs)
+  end
+
+  # Returns a greater-than binary filter where the current object is the LHS
+  # and +rhs+ is the RHS.
+  def >(rhs)
+    Norm::Filter::Binary.new(:op => '>', :lhs => self, :rhs => rhs)
+  end
+
+  # Returns a greater-than-or-equal-to binary filter where the current object
+  # is the LHS and +rhs+ is the RHS.
+  def >=(rhs)
+    Norm::Filter::Binary.new(:op => '>=', :lhs => self, :rhs => rhs)
+  end
+
+  # Returns a less-than binary filter where the current object is the LHS and
+  # +rhs+ is the RHS.
+  def <(rhs)
+    Norm::Filter::Binary.new(:op => '<', :lhs => self, :rhs => rhs)
+  end
+
+  # Returns a less-than-or-equal-to binary filter where the current object is
+  # the LHS and +rhs+ is the RHS.
+  def <=(rhs)
+    Norm::Filter::Binary.new(:op => '<=', :lhs => self, :rhs => rhs)
+  end
+
   class Column
     include Norm::Filter
 

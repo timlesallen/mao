@@ -5,7 +5,7 @@ module Norm
 
   # Connect to the database.
   def self.connect!
-    @conn ||= PG.connect(:dbname => 'nao_testing')
+    @conn ||= PG.connect(:dbname => 'norm_testing')
   end
 
   # Disconnect from the database.
