@@ -23,17 +23,17 @@ describe Norm do
     it { should be_an_instance_of Norm::Query }
   end
 
-  describe ".format_result" do
+  describe ".format_results" do
     let(:col_types) { {"korea" => "boolean",
                        "japan" => "numeric(10,2)",
                        "china" => "text"} }
 
-    before { Norm.should_receive(:normalize_result).with(:result, col_types) }
+    before { Norm.should_receive(:normalize_result).with(:result, col_types).and_return(:moo) }
 
     it do
       Norm.sql("SELECT * FROM #{Norm.quote_table("typey")}") do |pg_result|
-        Norm.format_result(:result, pg_result)
-      end
+        Norm.format_results([:result], pg_result)
+      end.should eq [:moo]
     end
   end
 

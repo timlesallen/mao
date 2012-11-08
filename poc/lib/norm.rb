@@ -21,10 +21,10 @@ module Norm
     @queries[table] ||= Query.new(@conn, table.to_s)
   end
 
-  # Formats the Hash +result+ according to the column types identifiable from
-  # the PG::Result +pg_result+.
+  # Formats the Array of Hashes +results+ according to the column types
+  # identifiable from the PG::Result +pg_result+.
   # TODO: memoization.
-  def self.format_result(result, pg_result)
+  def self.format_results(results, pg_result)
     # See: http://deveiate.org/code/pg/PG/Result.html#method-i-ftype
     col_types = {}
     pg_result.nfields.times do |n|
@@ -33,7 +33,7 @@ module Norm
       end
     end
 
-    normalize_result(result, col_types)
+    results.map {|result| normalize_result(result, col_types)}
   end
 
   # Normalizes the Hash +result+ (of Strings to Strings), with +col_types+
