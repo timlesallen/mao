@@ -1,30 +1,26 @@
 require 'spec_helper'
 
 describe Norm do
-  before { `psql nao_testing -f #{relative_to_spec("fixture.sql")}` }
-  before { Norm.connect! }
+  before { prepare_spec }
+
+  describe ".connect!" do
+    before { PG.should_receive(:connect) }
+    it { Norm.connect! }
+  end
+
+  describe ".sql" do
+    before { PG::Connection.any_instance.should_receive(:exec).with(:x).and_return(:y) }
+    it { Norm.sql(:x).should eq :y }
+  end
+
+  describe ".quote_table" do
+    before { PG::Connection.should_receive(:quote_ident).with("table").and_return(%Q{"table"}) }
+    it { Norm.quote_table("table").should eq %Q{"table"} }
+  end
 
   describe ".query" do
     subject { Norm.query(:empty) }
     it { should be_an_instance_of Norm::Query }
-  end
-
-  describe Norm::Query do
-    let(:empty) { Norm.query(:empty) }
-    let(:one) { Norm.query(:one) }
-
-    describe "#first" do
-      context "no results" do
-        it { empty.first.should be_nil }
-      end
-
-      context "some results" do
-        subject { one.first }
-
-        it { should be_an_instance_of Hash }
-        it { should eq({:id => 42, :value => "Hello, Dave."}) }
-      end
-    end
   end
 
   describe ".format_result" do
@@ -35,7 +31,7 @@ describe Norm do
     before { Norm.should_receive(:normalize_result).with(:result, col_types) }
 
     it do
-      Norm.execute("SELECT * FROM #{Norm.quote_table("typey")}") do |pg_result|
+      Norm.sql("SELECT * FROM #{Norm.quote_table("typey")}") do |pg_result|
         Norm.format_result(:result, pg_result)
       end
     end

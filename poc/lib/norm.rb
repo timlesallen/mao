@@ -1,29 +1,18 @@
 require 'pg'
 
 module Norm
+  require 'norm/query'
+
   def self.connect!
     @conn = PG.connect(:dbname => 'nao_testing')
   end
 
-  def self.execute(sql, &block)
+  def self.sql(sql, &block)
     @conn.exec(sql, &block)
   end
 
   def self.quote_table(name)
     PG::Connection.quote_ident(name)
-  end
-
-  class Query
-    def initialize(conn, table)
-      @conn, @table = conn, table
-    end
-
-    def first
-      @conn.exec("SELECT * FROM #{Norm.quote_table(@table)} LIMIT 1") do |pg_result|
-        next if pg_result.num_tuples.zero?
-        Norm.format_result(pg_result[0], pg_result)
-      end
-    end
   end
 
   # Returns a new Norm::Query object for +table+.
