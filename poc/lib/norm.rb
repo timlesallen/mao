@@ -34,6 +34,7 @@ module Norm
 
   # Formats the Hash +result+ according to the column types identifiable from
   # the PG::Result +pg_result+.
+  # TODO: memoization.
   def self.format_result(result, pg_result)
     # See: http://deveiate.org/code/pg/PG/Result.html#method-i-ftype
     col_types = {}
