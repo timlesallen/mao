@@ -58,6 +58,31 @@ class Norm::Query
     with_options(:only => columns)
   end
 
+  # A context for the #where DSL.  Any non-lexically bound names hit
+  # WhereContext#method_missing, which checks if it belongs to a column, and if
+  # so, constructs a Norm::Filter::Context.
+  class WhereContext
+    def initialize(query)
+      @query = query
+    end
+
+    def method_missing(name, *args, &block)
+      if args.length > 0
+        raise ArgumentError, "args not expected in #where subclause"
+      end
+
+      if block
+        raise ArgumentError, "block not expected in #where subclause"
+      end
+
+      unless @query.col_types[name]
+        raise ArgumentError, "unknown column for #{@query.table} #{name}"
+      end
+
+      Norm::Filter::Column.new(:name => name).freeze
+    end
+  end
+
   # Filters results based on the conditions specified in +block+.
   #
   # +block+ has available in context the column names of the table being
@@ -68,19 +93,7 @@ class Norm::Query
   # to combine them.  The return value of the block should be the full desired
   # filter.
   def where(&block)
-    context = Object.new
-
-    def context.method_missing(name, *args, &block)
-      if args.length > 0
-        raise ArgumentError, "args not expected in #where subclause"
-      end
-
-      if block
-        raise ArgumentError, "block not expected in #where subclause"
-      end
-
-      Norm::Filter::Column.new(:name => name).freeze
-    end
+    context = WhereContext.new(self)
 
     with_options(:where => context.instance_exec(&block).finalize)
   end

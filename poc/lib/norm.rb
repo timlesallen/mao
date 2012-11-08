@@ -1,5 +1,6 @@
 require 'pg'
 
+# The top-level module to access Norm.
 module Norm
   require 'norm/query'
 

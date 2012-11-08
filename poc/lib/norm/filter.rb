@@ -1,3 +1,7 @@
+# encoding: utf-8
+
+# A mix-in for any kind of filter in a where clause (vis-à-vis
+# Norm::Query#where).
 module Norm::Filter
   # If +obj+ is a Norm::Filter, call #finalize on it; otherwise, use
   # Norm.escape_literal to escape +obj.to_s+.
