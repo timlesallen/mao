@@ -9,7 +9,7 @@ module Norm::Filter
     if obj.is_a? Norm::Filter
       obj.finalize
     else
-      Norm.escape_literal(obj.to_s)
+      Norm.escape_literal(obj)
     end
   end
 

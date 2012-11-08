@@ -59,12 +59,12 @@ describe Norm::Query do
     its(:options) do
       should include(:where => [:Binary,
                                 'OR',
-                                [:Binary, '=', [:Column, :id], "'1'"],
-                                [:Binary, '>', [:Column, :id], "'10000'"]])
+                                [:Binary, '=', [:Column, :id], "1"],
+                                [:Binary, '>', [:Column, :id], "10000"]])
     end
 
     its(:sql) { should eq 'SELECT * FROM "some" WHERE ' \
-                          '(("id" = \'1\') OR ("id" > \'10000\'))' }
+                          '(("id" = 1) OR ("id" > 10000))' }
 
     context "non-extant column" do
       it { expect { some.where { non_extant_column == 42 }

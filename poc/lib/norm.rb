@@ -28,7 +28,20 @@ module Norm
 
   # Escape +value+ as appropriate for a literal in an SQL statement.
   def self.escape_literal(value)
-    @conn.escape_literal(value)
+    case value
+    when String
+      @conn.escape_literal(value)
+    when NilClass
+      "null"
+    when TrueClass
+      "true"
+    when FalseClass
+      "false"
+    when Numeric
+      value.to_s
+    else
+      raise ArgumentError, "don't know how to escape #{value.class}"
+    end
   end
 
   # Returns a new Norm::Query object for +table+.

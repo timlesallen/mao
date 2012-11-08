@@ -27,14 +27,24 @@ describe Norm do
   end
 
   describe ".escape_literal" do
-    describe "verify pass-thru" do
+    describe "verify pass-thru String" do
       before { PG::Connection.any_instance.should_receive(:escape_literal).
                    with("table").and_return(%q{'table'}) }
       it { Norm.escape_literal("table").should eq %q{'table'} }
     end
 
+    describe "verify not pass-thru others" do
+      before { PG::Connection.any_instance.
+                   should_not_receive(:escape_literal) }
+      it { Norm.escape_literal(nil).should eq "null" }
+    end
+
     describe "actual values" do
       it { Norm.escape_literal("table").should eq %q{'table'} }
+      it { Norm.escape_literal(42).should eq %q{42} }
+      it { Norm.escape_literal(true).should eq %q{true} }
+      it { Norm.escape_literal(false).should eq %q{false} }
+      it { Norm.escape_literal(nil).should eq %q{null} }
     end
   end
 

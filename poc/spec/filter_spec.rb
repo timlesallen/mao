@@ -15,7 +15,7 @@ describe Norm::Filter do
 
     context "with non-Norm::Filter" do
       before { Norm.should_receive(:escape_literal).
-                   with("42").and_return("ha") }
+                   with(42).and_return("ha") }
       it { Norm::Filter.finalize_or_literal(42).should eq "ha" }
     end
   end
@@ -119,8 +119,8 @@ describe Norm::Filter::Binary do
   before { prepare_spec }
   subject { Norm::Filter::Binary.new(:lhs => 42, :op => '=', :rhs => 42) }
 
-  its(:finalize) { should eq [:Binary, '=', "'42'", "'42'"] }
-  it { Norm::Filter.sql(subject.finalize).should eq "('42' = '42')" }
+  its(:finalize) { should eq [:Binary, '=', "42", "42"] }
+  it { Norm::Filter.sql(subject.finalize).should eq "(42 = 42)" }
 end
 
 # vim: set sw=2 cc=80 et:
