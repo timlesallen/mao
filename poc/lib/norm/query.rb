@@ -5,6 +5,8 @@
 # @options, to provide transparency and ensure simplicity of the resulting
 # design.
 class Norm::Query
+  require 'norm/filter'
+
   def initialize(conn, table, options={})
     @conn, @table, @options = conn, table.freeze, options.freeze
   end
@@ -41,8 +43,31 @@ class Norm::Query
     with_options(:only => columns)
   end
 
-  # TODO
+  # Filters results based on the conditions specified in +block+.
+  #
+  # +block+ has available in context the column names of the table being
+  # queried; use regular operators to construct tests, e.g. "x == 3" will
+  # filter where the column "x" has value 3.
+  #
+  # Boolean operations on columns return Norm::Filter objects; use #and and #or
+  # to combine them.  The return value of the block should be the full desired
+  # filter.
   def where(&block)
+    context = Object.new
+
+    def context.method_missing(name, *args, &block)
+      if args.length > 0
+        raise ArgumentError, "args not expected in #where subclause"
+      end
+
+      if block
+        raise ArgumentError, "block not expected in #where subclause"
+      end
+
+      Norm::Filter::Column.new(name).freeze
+    end
+
+    with_options(:where => context.instance_exec(&block).finalize)
   end
 
   # Constructs the SQL for this query.
@@ -56,6 +81,15 @@ class Norm::Query
     end
 
     s << " FROM #{Norm.quote_ident(@table)}"
+
+    if @options[:where]
+      s << " WHERE "
+      s << Norm.quote_ident(@options[:where][0].to_s)
+      s << " "
+      s << @options[:where][1]
+      s << " "
+      s << Norm.escape_literal(@options[:where][2].to_s)
+    end
 
     s << " LIMIT #{@options[:limit]}" if @options[:limit]
     s

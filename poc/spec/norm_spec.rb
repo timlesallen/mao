@@ -21,9 +21,21 @@ describe Norm do
   end
 
   describe ".quote_ident" do
-    before { PG::Connection.should_receive(:quote_ident).
-                 with("table").and_return(%Q{"table"}) }
-    it { Norm.quote_ident("table").should eq %Q{"table"} }
+    before { PG::Connection.any_instance.should_receive(:quote_ident).
+                 with("table").and_return(%q{"table"}) }
+    it { Norm.quote_ident("table").should eq %q{"table"} }
+  end
+
+  describe ".escape_literal" do
+    describe "verify pass-thru" do
+      before { PG::Connection.any_instance.should_receive(:escape_literal).
+                   with("table").and_return(%q{'table'}) }
+      it { Norm.escape_literal("table").should eq %q{'table'} }
+    end
+
+    describe "actual values" do
+      it { Norm.escape_literal("table").should eq %q{'table'} }
+    end
   end
 
   describe ".query" do

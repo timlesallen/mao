@@ -53,7 +53,17 @@ describe Norm::Query do
   end
 
   describe "#where" do
-    # TODO
+    subject { some.where { id == 1 } }
+    
+    its(:options) { should include(:where => [:id, '=', 1]) }
+    its(:sql) { should eq %q{SELECT * FROM "some" WHERE "id" = '1'} }
+
+    context "non-extant column" do
+      pending "it doesn't do table checks yet" do
+        it { expect { some.where { non_extant_column == 42 }
+                    }.to raise_exception(ArgumentError) }
+      end
+    end
   end
 
   describe "#execute!" do
