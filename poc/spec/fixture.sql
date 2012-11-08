@@ -9,3 +9,9 @@ CREATE TABLE one (
   value VARCHAR(200));
 
 INSERT INTO one (id, value) VALUES (42, 'Hello, Dave.');
+
+DROP TABLE IF EXISTS typey;
+CREATE TABLE typey (
+  korea BOOLEAN DEFAULT TRUE,
+  japan DECIMAL(10,2),
+  china TEXT);

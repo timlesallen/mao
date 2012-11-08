@@ -1,4 +1,4 @@
-require 'nao'
+require 'norm'
 
 def relative_to_spec(filename)
   File.join(File.dirname(File.absolute_path(__FILE__)),
