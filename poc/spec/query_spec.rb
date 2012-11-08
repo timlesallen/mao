@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Norm::Query do
-  around {|example| prepare_spec(example) }
+  before { prepare_spec }
 
   let(:empty) { Norm.query(:empty) }
   let(:one) { Norm.query(:one) }

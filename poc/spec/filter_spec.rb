@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Norm::Filter do
+  before { prepare_spec }
+
   let(:col_x) { Norm::Filter::Column.new(:name => :x) }
   let(:col_y) { Norm::Filter::Column.new(:name => :y) }
 
@@ -88,6 +90,20 @@ describe Norm::Filter do
     it { subject.options[:lhs].should be col_x }
     it { subject.options[:rhs].should be col_y }
   end
+end
+
+describe Norm::Filter::Column do
+  before { prepare_spec }
+  subject { Norm::Filter::Column.new(:name => :Margorth) }
+
+  its(:sql) { should eq '"Margorth"' }
+end
+
+describe Norm::Filter::Binary do
+  before { prepare_spec }
+  subject { Norm::Filter::Binary.new(:lhs => 42, :op => '=', :rhs => 42) }
+
+  its(:sql) { should eq "('42' = '42')" }
 end
 
 # vim: set sw=2 cc=80 et:

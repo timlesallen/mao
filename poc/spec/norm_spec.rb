@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Norm do
-  around {|example| prepare_spec(example) }
+  before { prepare_spec }
 
   describe ".connect!" do
     before { PG.should_receive(:connect) }

@@ -5,10 +5,9 @@ def relative_to_spec(filename)
             filename)
 end
 
-def prepare_spec(example)
+def prepare_spec
   `psql norm_testing -f #{relative_to_spec("fixture.sql")}`
   Norm.connect!
-  example.call
 end
 
 # vim: set sw=2 cc=80 et:
