@@ -53,17 +53,17 @@ describe Norm::Query do
   end
 
   describe "#where" do
-    subject { some.where { (id == 1).or(id == 2) } }
+    subject { some.where { (id == 1).or(id > 10_000) } }
     
     its(:options) do
       should include(:where => [:Binary,
                                 'OR',
                                 [:Binary, '=', [:Column, :id], "'1'"],
-                                [:Binary, '=', [:Column, :id], "'2'"]])
+                                [:Binary, '>', [:Column, :id], "'10000'"]])
     end
 
     its(:sql) { should eq 'SELECT * FROM "some" WHERE ' \
-                          '(("id" = \'1\') OR ("id" = \'2\'))' }
+                          '(("id" = \'1\') OR ("id" > \'10000\'))' }
 
     context "non-extant column" do
       pending "it doesn't do table checks yet" do
