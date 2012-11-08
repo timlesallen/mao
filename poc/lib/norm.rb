@@ -24,8 +24,8 @@ module Norm
   def self.quote_ident(name)
     @conn.quote_ident(name)
   end
-  #
-  # Escape +value+ as appropriate for a table or column name in an SQL statement.
+
+  # Escape +value+ as appropriate for a literal in an SQL statement.
   def self.escape_literal(value)
     @conn.escape_literal(value)
   end

@@ -64,10 +64,10 @@ class Norm::Query
         raise ArgumentError, "block not expected in #where subclause"
       end
 
-      Norm::Filter::Column.new(name).freeze
+      Norm::Filter::Column.new(:name => name).freeze
     end
 
-    with_options(:where => context.instance_exec(&block).finalize)
+    with_options(:where => context.instance_exec(&block))
   end
 
   # Constructs the SQL for this query.
@@ -84,11 +84,7 @@ class Norm::Query
 
     if @options[:where]
       s << " WHERE "
-      s << Norm.quote_ident(@options[:where][0].to_s)
-      s << " "
-      s << @options[:where][1]
-      s << " "
-      s << Norm.escape_literal(@options[:where][2].to_s)
+      s << @options[:where].sql
     end
 
     s << " LIMIT #{@options[:limit]}" if @options[:limit]

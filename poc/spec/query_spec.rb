@@ -56,7 +56,7 @@ describe Norm::Query do
     subject { some.where { id == 1 } }
     
     its(:options) { should include(:where => [:id, '=', 1]) }
-    its(:sql) { should eq %q{SELECT * FROM "some" WHERE "id" = '1'} }
+    its(:sql) { should eq %q{SELECT * FROM "some" WHERE ("id" = '1')} }
 
     context "non-extant column" do
       pending "it doesn't do table checks yet" do
