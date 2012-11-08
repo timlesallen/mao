@@ -20,10 +20,10 @@ describe Norm do
     it { Norm.sql(:x).should eq :y }
   end
 
-  describe ".quote_table" do
+  describe ".quote_ident" do
     before { PG::Connection.should_receive(:quote_ident).
                  with("table").and_return(%Q{"table"}) }
-    it { Norm.quote_table("table").should eq %Q{"table"} }
+    it { Norm.quote_ident("table").should eq %Q{"table"} }
   end
 
   describe ".query" do
@@ -41,7 +41,7 @@ describe Norm do
                  with(:result, col_types).and_return(:moo) }
 
     it do
-      Norm.sql("SELECT * FROM #{Norm.quote_table("typey")}") do |pg_result|
+      Norm.sql("SELECT * FROM #{Norm.quote_ident("typey")}") do |pg_result|
         Norm.format_results([:result], pg_result)
       end.should eq [:moo]
     end

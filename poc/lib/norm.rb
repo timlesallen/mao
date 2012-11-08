@@ -20,8 +20,8 @@ module Norm
     @conn.exec(sql, &block)
   end
 
-  # Quote +name+ as appropriate for a table name in an SQL statement.
-  def self.quote_table(name)
+  # Quote +name+ as appropriate for a table or column name in an SQL statement.
+  def self.quote_ident(name)
     PG::Connection.quote_ident(name)
   end
 

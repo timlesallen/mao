@@ -27,6 +27,33 @@ describe Norm::Query do
 
     its(:options) { should include(:limit => 2) }
     its(:sql) { should eq 'SELECT * FROM "some" LIMIT 2' }
+
+    context "invalid argument" do
+      it { expect { some.limit("2")
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.limit(false)
+                  }.to raise_exception(ArgumentError) }
+    end
+  end
+
+  describe "#only" do
+    subject { some.only(["x", "Y"], "z") }
+
+    its(:options) { should include(:only => %w(x Y z)) }
+    its(:sql) { should eq 'SELECT "x", "Y", "z" FROM "some"' }
+
+    context "invalid argument" do
+      it { expect { some.only(42)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.only(nil)
+                  }.to raise_exception(ArgumentError) }
+    end
+  end
+
+  describe "#where" do
+    # TODO
   end
 
   describe "#execute!" do

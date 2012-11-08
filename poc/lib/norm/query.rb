@@ -19,14 +19,44 @@ class Norm::Query
     self.class.new(@conn, @table, @options.merge(options)).freeze
   end
 
-  # Restricts the query to a given number of results.
+  # Restricts the query to at most +n+ results.
   def limit(n)
-    with_options(:limit => n)
+    unless n.is_a? Integer
+      raise ArgumentError, "#{n.inspect} not an Integer"
+    end
+
+    with_options(:limit => n.to_i)
+  end
+
+  # Only returns the given +columns+.
+  def only(*columns)
+    columns = columns.flatten
+
+    columns.each do |column|
+      unless column.is_a? String
+        raise ArgumentError, "#{column.inspect} not a String"
+      end
+    end
+
+    with_options(:only => columns)
+  end
+
+  # TODO
+  def where(&block)
   end
 
   # Constructs the SQL for this query.
   def sql
-    s = "SELECT * FROM #{Norm.quote_table(@table)}"
+    s = "SELECT "
+
+    if @options[:only]
+      s << @options[:only].map {|c| Norm.quote_ident(c)}.join(", ")
+    else
+      s << "*"
+    end
+
+    s << " FROM #{Norm.quote_ident(@table)}"
+
     s << " LIMIT #{@options[:limit]}" if @options[:limit]
     s
   end
