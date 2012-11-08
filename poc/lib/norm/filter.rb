@@ -1,11 +1,22 @@
 module Norm::Filter
-  # If +obj+ is a Norm::Filter, call #sql on it; otherwise, use
+  # If +obj+ is a Norm::Filter, call #finalize on it; otherwise, use
   # Norm.escape_literal to escape +obj.to_s+.
-  def self.sql_or_literal(obj)
+  def self.finalize_or_literal(obj)
     if obj.is_a? Norm::Filter
-      obj.sql
+      obj.finalize
     else
       Norm.escape_literal(obj.to_s)
+    end
+  end
+
+  # Generate the SQL for the finalized object +finalized+.  If +finalized+ is a
+  # String, it's returned without modification.
+  def self.sql(finalized)
+    if finalized.is_a? String
+      finalized
+    else
+      klass, *args = finalized
+      Norm::Filter.const_get(klass).sql(*args)
     end
   end
 
@@ -66,21 +77,32 @@ module Norm::Filter
   class Column
     include Norm::Filter
 
-    def sql
-      Norm.quote_ident(@options[:name].to_s)
+    def finalize
+      [:Column, @options[:name]]
+    end
+
+    def self.sql(name)
+      Norm.quote_ident(name.to_s)
     end
   end
 
   class Binary
     include Norm::Filter
 
-    def sql
+    def finalize
+      [:Binary,
+       @options[:op],
+       Norm::Filter.finalize_or_literal(@options[:lhs]),
+       Norm::Filter.finalize_or_literal(@options[:rhs])]
+    end
+
+    def self.sql(op, lhs, rhs)
       s = "("
-      s << Norm::Filter.sql_or_literal(@options[:lhs])
+      s << Norm::Filter.sql(lhs)
       s << " "
-      s << @options[:op]
+      s << op
       s << " "
-      s << Norm::Filter.sql_or_literal(@options[:rhs])
+      s << Norm::Filter.sql(rhs)
       s << ")"
       s
     end

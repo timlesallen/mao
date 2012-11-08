@@ -67,7 +67,7 @@ class Norm::Query
       Norm::Filter::Column.new(:name => name).freeze
     end
 
-    with_options(:where => context.instance_exec(&block))
+    with_options(:where => context.instance_exec(&block).finalize)
   end
 
   # Constructs the SQL for this query.
@@ -84,7 +84,7 @@ class Norm::Query
 
     if @options[:where]
       s << " WHERE "
-      s << @options[:where].sql
+      s << Norm::Filter.sql(@options[:where])
     end
 
     s << " LIMIT #{@options[:limit]}" if @options[:limit]
