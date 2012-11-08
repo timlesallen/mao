@@ -60,12 +60,15 @@ class Norm::Query
 
   # A context for the #where DSL.  Any non-lexically bound names hit
   # WhereContext#method_missing, which checks if it belongs to a column, and if
-  # so, constructs a Norm::Filter::Context.
+  # so, constructs a Norm::Filter::Column.
   class WhereContext
     def initialize(query)
       @query = query
     end
 
+    # Ensure +args+ and +block+ are both empty.  Assert that a column for the
+    # query this context belongs to by the name +name+ exists, and return a
+    # Norm::Filter::Column for that column.
     def method_missing(name, *args, &block)
       if args.length > 0
         raise ArgumentError, "args not expected in #where subclause"
@@ -100,29 +103,74 @@ class Norm::Query
 
   # Constructs the SQL for this query.
   def sql
-    s = "SELECT "
+    s = ""
+    options = @options.dup
 
-    if @options[:only]
-      s << @options[:only].map {|c| Norm.quote_ident(c)}.join(", ")
+    if update = options.delete(:update)
+      s = "UPDATE "
+      s << Norm.quote_ident(@table)
+      s << " SET "
+
+      if update.length == 0
+        raise ArgumentError, "invalid update: nothing to set"
+      end
+
+      s << update.map do |k,v|
+        k = k.to_sym
+        unless @col_types[k]
+          raise ArgumentError, "no such column to update: #{k}"
+        end
+
+        "#{Norm.quote_ident(k.to_s)} = #{Norm.escape_literal(v)}"
+      end.join(", ")
+
+      if where = options.delete(:where)
+        s << " WHERE "
+        s << Norm::Filter.sql(where)
+      end
     else
-      s << "*"
+      s = "SELECT "
+
+      if only = options.delete(:only)
+        s << only.map {|c| Norm.quote_ident(c)}.join(", ")
+      else
+        s << "*"
+      end
+
+      s << " FROM #{Norm.quote_ident(@table)}"
+
+      if where = options.delete(:where)
+        s << " WHERE "
+        s << Norm::Filter.sql(where)
+      end
+
+      if limit = options.delete(:limit)
+        s << " LIMIT #{limit}"
+      end
     end
 
-    s << " FROM #{Norm.quote_ident(@table)}"
-
-    if @options[:where]
-      s << " WHERE "
-      s << Norm::Filter.sql(@options[:where])
+    if options.length > 0
+      raise ArgumentError,
+          "invalid options in #sql: #{options.inspect}. " \
+          "SQL constructed: #{s}"
     end
 
-    s << " LIMIT #{@options[:limit]}" if @options[:limit]
     s
   end
 
   # Executes the constructed query and returns an Array of Hashes of results.
-  def execute!
-    @conn.exec(sql) do |pg_result|
+  def select!
+    # Ensure we can never be destructive by nilifying :update.
+    @conn.exec(with_options(:update => nil).sql) do |pg_result|
       pg_result.map {|result| Norm.normalize_result(result, @col_types)}
+    end
+  end
+
+  # Executes the changes in Hash +changes+ to the rows matching this object,
+  # returning the number of affected rows.
+  def update!(changes)
+    @conn.exec(with_options(:update => changes).sql) do |pg_result|
+      pg_result.cmd_tuples
     end
   end
 end

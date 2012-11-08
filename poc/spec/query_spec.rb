@@ -72,25 +72,32 @@ describe Norm::Query do
     end
   end
 
-  describe "#execute!" do
-    describe "use of #sql" do
-      # HACK: construct empty manually, otherwise it's frozen and we can't use
-      # #should_receive.
+  describe "#select!" do
+    context "use of #sql" do
+      # HACK: construct empty manually, otherwise it'll try to look up column
+      # info and ruin our assertions.
       let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
-                                    "empty") }
+                                    "empty",
+                                    {},
+                                    {}) }
+      let(:empty_sure) { double("empty_sure") }
       let(:empty_sql) { double("empty_sql") }
-      before { empty.should_receive(:sql).and_return(empty_sql) }
+      before { empty.should_receive(:with_options).
+                   with(:update => nil).
+                   and_return(empty_sure) }
+      before { empty_sure.should_receive(:sql).
+                   and_return(empty_sql) }
       before { PG::Connection.any_instance.should_receive(:exec).
                    with(empty_sql).and_return(:ok) }
-      it { empty.execute!.should eq :ok }
+      it { empty.select!.should eq :ok }
     end
 
     context "no results" do
-      it { empty.execute!.should eq [] }
+      it { empty.select!.should eq [] }
     end
 
     context "one result" do
-      subject { one.execute! }
+      subject { one.select! }
 
       it { should be_an_instance_of Array }
       it { should have(1).item }
@@ -98,7 +105,7 @@ describe Norm::Query do
     end
 
     context "some results" do
-      subject { some.execute! }
+      subject { some.select! }
 
       it { should be_an_instance_of Array }
       it { should have(3).items }
@@ -106,6 +113,37 @@ describe Norm::Query do
       its([0]) { should eq({:id => 1, :value => "Bah"}) }
       its([1]) { should eq({:id => 2, :value => "Hah"}) }
       its([2]) { should eq({:id => 3, :value => "Pah"}) }
+    end
+  end
+
+  describe "#update!" do
+    context "use of #sql" do
+      let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
+                                    "empty",
+                                    {},
+                                    {}) }
+      let(:empty_update) { double("empty_update") }
+      let(:empty_sql) { double("empty_sql") }
+      before { empty.should_receive(:with_options).
+                   with(:update => {:x => :y}).
+                   and_return(empty_update) }
+      before { empty_update.should_receive(:sql).and_return(empty_sql) }
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with(empty_sql).and_return(:ok) }
+      it { empty.update!(:x => :y).should eq :ok }
+    end
+
+    context "no matches" do
+      it { empty.update!(:value => "y").should eq 0 }
+    end
+
+    context "no such column" do
+      it { expect { empty.update!(:x => "y")
+                  }.to raise_exception(ArgumentError, /no such column/) }
+    end
+
+    context "some matches" do
+      it { some.where { id <= 2 }.update!(:value => 'Meh').should eq 2 }
     end
   end
 end
