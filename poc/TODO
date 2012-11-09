@@ -1,1 +1,3 @@
 Specify error handling at all levels.
+Joins/eager loads.  What syntax?  How do we prevent unexpected blowouts?
+ - no auto subqueries, etc.  Thinner wrapper over SQL than AR.
