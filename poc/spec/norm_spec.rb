@@ -45,6 +45,9 @@ describe Norm do
       it { Norm.escape_literal(true).should eq %q{true} }
       it { Norm.escape_literal(false).should eq %q{false} }
       it { Norm.escape_literal(nil).should eq %q{null} }
+      it { Norm.escape_literal([]).should eq %q{(null)} }
+      it { Norm.escape_literal([1]).should eq %q{(1)} }
+      it { Norm.escape_literal([1, "xzy"]).should eq %q{(1, 'xzy')} }
     end
   end
 

@@ -86,6 +86,12 @@ module Norm::Filter
     Norm::Filter::Binary.new(:op => 'IS', :lhs => self, :rhs => nil)
   end
 
+  # Returns a filter where the current object is checked if it is IN +rhs+,
+  # typically a list.
+  def in(rhs)
+    Norm::Filter::Binary.new(:op => 'IN', :lhs => self, :rhs => rhs)
+  end
+
   class Column
     include Norm::Filter
 

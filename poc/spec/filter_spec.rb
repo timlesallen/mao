@@ -114,6 +114,15 @@ describe Norm::Filter do
     it { subject.options[:lhs].should be col_x }
     it { subject.options[:rhs].should be_nil }
   end
+
+  describe "#in" do
+    subject { col_x.in([1, 2, 3]) }
+
+    it { should be_an_instance_of Norm::Filter::Binary }
+    it { subject.options[:op].should eq "IN" }
+    it { subject.options[:lhs].should be col_x }
+    it { subject.options[:rhs].should eq [1, 2, 3] }
+  end
 end
 
 describe Norm::Filter::Column do

@@ -39,6 +39,14 @@ module Norm
       "false"
     when Numeric
       value.to_s
+    when Array
+      if value == []
+        # NULL IN NULL is NULL in SQL, so this is "safe".  Empty lists () are
+        # apparently part of the standard, but not widely supported (!).
+        "(null)"
+      else
+        "(#{value.map {|v| escape_literal(v)}.join(", ")})"
+      end
     else
       raise ArgumentError, "don't know how to escape #{value.class}"
     end
