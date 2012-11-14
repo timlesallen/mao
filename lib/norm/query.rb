@@ -166,6 +166,11 @@ class Norm::Query
     end
   end
 
+  # Limits the query to one result, and returns that result.
+  def select_first!
+    limit(1).select!.first
+  end
+
   # Executes the changes in Hash +changes+ to the rows matching this object,
   # returning the number of affected rows.
   def update!(changes)

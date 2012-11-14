@@ -116,6 +116,18 @@ describe Norm::Query do
     end
   end
 
+  describe "#select_first!" do
+    # HACK: construct empty manually, otherwise it'll try to look up column
+    # info and ruin our assertions.
+    let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
+                                  "empty",
+                                  {},
+                                  {}) }
+    before { empty.should_receive(:limit).with(1).and_return(empty) }
+    before { empty.should_receive(:select!).and_return([:ok]) }
+    it { empty.select_first!.should eq :ok }
+  end
+
   describe "#update!" do
     context "use of #sql" do
       let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
@@ -144,6 +156,13 @@ describe Norm::Query do
 
     context "some matches" do
       it { some.where { id <= 2 }.update!(:value => 'Meh').should eq 2 }
+    end
+  end
+
+  describe "reconnection" do
+    it do
+      Norm.query(:one).select!.should be_an_instance_of Array
+      pending
     end
   end
 end
