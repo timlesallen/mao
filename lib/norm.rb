@@ -118,7 +118,7 @@ module Norm
   # +type+.
   def self.convert_type(value, type)
     case type
-    when "integer"
+    when "integer", "smallint", "bigint", "serial", "bigserial"
       value.to_i
     else
       value

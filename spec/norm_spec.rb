@@ -121,6 +121,10 @@ describe Norm do
   describe ".convert_type" do
     context "integers" do
       it { Norm.convert_type("42", "integer").should eq 42 }
+      it { Norm.convert_type("42", "smallint").should eq 42 }
+      it { Norm.convert_type("42", "bigint").should eq 42 }
+      it { Norm.convert_type("42", "serial").should eq 42 }
+      it { Norm.convert_type("42", "bigserial").should eq 42 }
     end
 
     context "character" do
