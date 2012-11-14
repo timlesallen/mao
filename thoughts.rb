@@ -33,3 +33,10 @@ X.query(:tblSamuraiUser).where(lambda {email == "arlen@noblesamurai.com"}, lambd
 #  as with a :joins key, which might map to an array of joins options hashes.
 #
 #  Anyway, those are my thoughts for now, we can chat further!
+
+
+
+# Tenet:
+#
+# From the code you have written, it should be sufficiently declarative and map
+# sufficiently predictably to SQL that you can predict the SQL produced.
