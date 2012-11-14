@@ -115,21 +115,6 @@ class Norm::Query
     with_options(:returning => columns)
   end
 
-  # Filters results based on the conditions specified in +block+.
-  #
-  # +block+ has available in context the column names of the table being
-  # queried; use regular operators to construct tests, e.g. "x == 3" will
-  # filter where the column "x" has value 3.
-  #
-  # Boolean operations on columns return Norm::Filter objects; use #and and #or
-  # to combine them.  The return value of the block should be the full desired
-  # filter.
-  def where(&block)
-    context = Norm::Filter::Table.new(self, false).freeze
-
-    with_options(:where => context.instance_exec(&block).finalize)
-  end
-
   # A context for the #join DSL.  Any non-lexically bound names hit
   # JoinContext#method_missing, which constructs a Norm::Filter::Table for the
   # table with that name.
@@ -150,6 +135,31 @@ class Norm::Query
     end
   end
 
+  # Filters results based on the conditions specified in +block+.
+  #
+  # Depending on if #join has been called, one of two things occur:
+  #   1. If #join has not been called, +block+ has available in context the
+  #      column names of the table being queried; or,
+  #   2. If #join has been called, +block+ has available in context the table
+  #      names of the tables involved in the query.  Per #join, those objects
+  #      will have the columns available as methods.
+  #
+  # Once you have a column, use regular operators to construct tests, e.g. "x
+  # == 3" will filter where the column "x" has value 3.
+  #
+  # Boolean operations on columns return Norm::Filter objects; use #and and #or
+  # to combine them.  The return value of the block should be the full desired
+  # filter.
+  def where(&block)
+    if @options[:join]
+      context = JoinContext.new.freeze
+    else
+      context = Norm::Filter::Table.new(self, false).freeze
+    end
+
+    with_options(:where => context.instance_exec(&block).finalize)
+  end
+
   # Joins the results of this table against another table, +target+.  The
   # conditions for joining one row in this table against one in +target+ are
   # specified in +block+.
@@ -161,7 +171,7 @@ class Norm::Query
   #
   # Boolean operations are then all per #where.
   def join(target, &block)
-    context = JoinContext.new
+    context = JoinContext.new.freeze
 
     with_options(:join => [target, context.instance_exec(&block).finalize])
   end

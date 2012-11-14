@@ -125,6 +125,28 @@ describe Norm::Query do
       it { expect { some.where { non_extant_column == 42 }
                   }.to raise_exception(ArgumentError) }
     end
+
+    context "with #join" do
+      subject { some.join(:one) { one.value == some.value }.
+                    where { one.id == 42 } }
+
+      its(:options) { should include(:where => [:Binary,
+                                                '=',
+                                                [:Column, :one, :id],
+                                                "42"]) }
+      its(:sql) { should eq 'SELECT "some"."id" "c1", ' +
+                            '"some"."value" "c2", ' +
+                            '"one"."id" "c3", ' +
+                            '"one"."value" "c4" ' +
+                            'FROM "some" ' +
+                            'INNER JOIN "one" ' +
+                            'ON ("one"."value" = "some"."value") ' +
+                            'WHERE ("one"."id" = 42)' }
+
+      its(:select!) { should eq(
+                          [{:some => {:id => 3, :value => "Hello, Dave."},
+                            :one => {:id => 42, :value => "Hello, Dave."}}]) }
+    end
   end
 
   describe "#join" do
