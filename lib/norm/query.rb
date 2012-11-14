@@ -62,16 +62,42 @@ class Norm::Query
     with_options(:limit => n.to_i)
   end
 
-  # Only returns the given +columns+.
+  # Only returns the given +columns+, Symbols (possibly nested in Arrays).
+  #
+  # If +columns+ is a single argument, and it's a Hash, the keys should be
+  # Symbols corresponding to table names, and the values Arrays of Symbol
+  # column names.  This is only for use with #join, and #only must be called
+  # after #join.
   def only(*columns)
     columns = columns.flatten
 
-    columns.each do |column|
-      unless column.is_a? Symbol
-        raise ArgumentError, "#{column.inspect} not a String"
+    if columns.length == 1 and columns[0].is_a?(Hash)
+      unless @options[:join]
+        raise ArgumentError, "#only with a Hash must be used only after #join"
       end
-      unless @col_types[column]
-        raise ArgumentError, "#{column.inspect} is not a column in this table"
+
+      other = Norm.query(@options[:join][0])
+      columns = columns[0]
+      columns.each do |table, table_columns|
+        unless table_columns.is_a? Array
+          raise ArgumentError, "#{table_columns.inspect} is not an Array"
+        end
+
+        if table == @table
+          table_columns.each do |column|
+            check_column(column, @table, @col_types)
+          end
+        elsif table == other.table
+          table_columns.each do |column|
+            check_column(column, other.table, other.col_types)
+          end
+        else
+          raise ArgumentError, "#{table} is not a column in this query"
+        end
+      end
+    else
+      columns.each do |column|
+        check_column(column, @table, @col_types)
       end
     end
 
@@ -83,12 +109,7 @@ class Norm::Query
     columns = columns.flatten
 
     columns.each do |column|
-      unless column.is_a? Symbol
-        raise ArgumentError, "#{column.inspect} not a String"
-      end
-      unless @col_types[column]
-        raise ArgumentError, "#{column.inspect} is not a column in this table"
-      end
+      check_column(column, @table, @col_types)
     end
 
     with_options(:returning => columns)
@@ -159,13 +180,10 @@ class Norm::Query
         raise ArgumentError, "invalid update: nothing to set"
       end
 
-      s << update.map do |k,v|
-        k = k.to_sym
-        unless @col_types[k]
-          raise ArgumentError, "no such column to update: #{k}"
-        end
+      s << update.map do |column, value|
+        check_column(column, @table, @col_types)
 
-        "#{Norm.quote_ident(k.to_s)} = #{Norm.escape_literal(v)}"
+        "#{Norm.quote_ident(column)} = #{Norm.escape_literal(value)}"
       end.join(", ")
 
       if where = options.delete(:where)
@@ -178,13 +196,9 @@ class Norm::Query
       s << " ("
 
       keys = insert.map(&:keys).flatten.uniq.sort
-      s << keys.map do |k|
-        k = k.to_sym
-        unless @col_types[k]
-          raise ArgumentError, "no such column to update: #{k}"
-        end
-
-        Norm.quote_ident(k.to_s)
+      s << keys.map do |column|
+        check_column(column, @table, @col_types)
+        Norm.quote_ident(column)
       end.join(", ")
       s << ") VALUES "
 
@@ -215,20 +229,25 @@ class Norm::Query
       s = "SELECT "
 
       join = options.delete(:join)
+      only = options.delete(:only)
 
-      if only = options.delete(:only)
-        s << only.map {|c| Norm.quote_ident(c)}.join(", ")
-      elsif join
+      if join
         n = 0
         s << (@col_types.keys.sort.map {|c|
           n += 1
-          "#{Norm.quote_ident(@table)}.#{Norm.quote_ident(c)} " +
-          "#{Norm.quote_ident("c#{n}")}"
+          if !only or (only[@table] and only[@table].include?(c))
+            "#{Norm.quote_ident(@table)}.#{Norm.quote_ident(c)} " +
+            "#{Norm.quote_ident("c#{n}")}"
+          end
         } + Norm.query(join[0]).col_types.keys.sort.map {|c|
           n += 1
-          "#{Norm.quote_ident(join[0])}.#{Norm.quote_ident(c)} " +
-          "#{Norm.quote_ident("c#{n}")}"
-        }).join(", ")
+          if !only or (only[join[0]] and only[join[0]].include?(c))
+            "#{Norm.quote_ident(join[0])}.#{Norm.quote_ident(c)} " +
+            "#{Norm.quote_ident("c#{n}")}"
+          end
+        }).reject(&:nil?).join(", ")
+      elsif only
+        s << only.map {|c| Norm.quote_ident(c)}.join(", ")
       else
         s << "*"
       end
@@ -297,6 +316,17 @@ class Norm::Query
       else
         pg_result.cmd_tuples
       end
+    end
+  end
+
+  private
+
+  def check_column column, table, col_types
+    unless column.is_a? Symbol
+      raise ArgumentError, "#{column.inspect} not a Symbol"
+    end
+    unless col_types[column]
+      raise ArgumentError, "#{column.inspect} is not a column in #{table}"
     end
   end
 end

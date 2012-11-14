@@ -62,6 +62,27 @@ describe Norm::Query do
       it { expect { some.only(:j)
                   }.to raise_exception(ArgumentError) }
     end
+
+    context "with #join" do
+      subject { some.join(:one) { one.value == some.value }.
+                    only(:one => [:id]) }
+
+      its(:options) { should include(:only => {:one => [:id]}) }
+      its(:sql) { should eq 'SELECT "one"."id" "c3" ' +
+                            'FROM "some" ' +
+                            'INNER JOIN "one" ' +
+                            'ON ("one"."value" = "some"."value")' }
+
+      context "before #join" do
+        it { expect { some.only(:some => [:id])
+                    }.to raise_exception(ArgumentError) }
+      end
+
+      context "poor arguments" do
+        it { expect { some.join(:one) { one.value }.only(:some => :id)
+                    }.to raise_exception(ArgumentError) }
+      end
+    end
   end
 
   describe "#returning" do
@@ -214,7 +235,7 @@ describe Norm::Query do
 
     context "no such column" do
       it { expect { empty.update!(:x => "y")
-                  }.to raise_exception(ArgumentError, /no such column/) }
+                  }.to raise_exception(ArgumentError, /is not a column/) }
     end
 
     context "some matches" do
