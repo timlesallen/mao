@@ -129,6 +129,16 @@ class Norm::Query
     end
   end
 
+  # Joins the results of this table against another table, +target+.  The
+  # conditions for joining one row in this table against one in +target+ are
+  # specified in +block+.
+  #
+  # +block+ is per #where's, except the names in context are tables, not
+  # columns; the tables returned are the same as the context of #where itself,
+  # so for instance, "blah.x == 3" will filter where the column "x" of table
+  # "blah" (which should be either this table, or the +target+ table) equals 3.
+  #
+  # Boolean operations are then all per #where.
   def join(target, &block)
     context = JoinContext.new
 
