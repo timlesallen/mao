@@ -137,6 +137,13 @@ describe Norm do
       it { Norm.convert_type("blah", "character varying(200)").
                should eq "blah" }
     end
+
+    context "dates" do
+      # Note: without timezone is assumed to be in UTC.
+      it { Norm.convert_type("2012-11-10 19:45:00",
+                             "timestamp without time zone").
+               should eq Time.new(2012, 11, 10, 19, 45, 0, 0) }
+    end
   end
 end
 

@@ -127,7 +127,14 @@ module Norm
     case type
     when "integer", "smallint", "bigint", "serial", "bigserial"
       value.to_i
+    when /^character varying/
+      value
+    when "timestamp without time zone"
+      # We assume it's in UTC.  (Dangerous?)
+      value =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
+      Time.new($1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, 0)
     else
+      STDERR.puts "#{self.class.name}: unknown type: #{type}"
       value
     end
   end

@@ -7,6 +7,7 @@ describe Norm::Query do
   let(:one) { Norm.query(:one) }
   let(:some) { Norm.query(:some) }
   let(:autoid) { Norm.query(:autoid) }
+  let(:times) { Norm.query(:times) }
 
   describe ".new" do
     subject { Norm::Query.new(:table, {}, {}) }
@@ -162,6 +163,11 @@ describe Norm::Query do
       its(:select!) { should eq(
                           [{:some => {:id => 3, :value => "Hello, Dave."},
                             :one => {:id => 42, :value => "Hello, Dave."}}]) }
+    end
+
+    context "with time values" do
+      it { times.select_first!.should eq(
+               {:id => 1, :time => Time.new(2012, 11, 10, 19, 45, 0, 0)}) }
     end
   end
 
