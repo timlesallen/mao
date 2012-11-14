@@ -127,10 +127,18 @@ end
 
 describe Norm::Filter::Column do
   before { prepare_spec }
-  subject { Norm::Filter::Column.new(:name => :Margorth) }
 
-  its(:finalize) { should eq [:Column, :Margorth] }
-  it { Norm::Filter.sql(subject.finalize).should eq '"Margorth"' }
+  context "without table" do
+    subject { Norm::Filter::Column.new(:name => :Margorth) }
+    its(:finalize) { should eq [:Column, :Margorth] }
+    it { Norm::Filter.sql(subject.finalize).should eq '"Margorth"' }
+  end
+
+  context "with table" do
+    subject { Norm::Filter::Column.new(:table => :Lol, :name => :Margorth) }
+    its(:finalize) { should eq [:Column, :Lol, :Margorth] }
+    it { Norm::Filter.sql(subject.finalize).should eq '"Lol"."Margorth"' }
+  end
 end
 
 describe Norm::Filter::Binary do
@@ -139,6 +147,27 @@ describe Norm::Filter::Binary do
 
   its(:finalize) { should eq [:Binary, '=', "42", "42"] }
   it { Norm::Filter.sql(subject.finalize).should eq "(42 = 42)" }
+end
+
+describe Norm::Filter::Table do
+  before { prepare_spec }
+
+  context "non-explicit" do
+    let(:some) { Norm::Filter::Table.new(Norm.query(:some), false) }
+    it { some.value.should be_an_instance_of Norm::Filter::Column }
+    it { some.value.finalize.should eq [:Column, :value] }
+  end
+
+  context "explicit" do
+    let(:some) { Norm::Filter::Table.new(Norm.query(:some), true) }
+    it { some.value.should be_an_instance_of Norm::Filter::Column }
+    it { some.value.finalize.should eq [:Column, :some, :value] }
+  end
+
+  context "non-extant" do
+    let(:some) { Norm::Filter::Table.new(Norm.query(:some), false) }
+    it { expect { some.blargh }.to raise_exception(ArgumentError) }
+  end
 end
 
 # vim: set sw=2 cc=80 et:

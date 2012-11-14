@@ -96,11 +96,15 @@ module Norm::Filter
     include Norm::Filter
 
     def finalize
-      [:Column, @options[:name]]
+      if @options[:table]
+        [:Column, @options[:table], @options[:name]]
+      else
+        [:Column, @options[:name]]
+      end
     end
 
-    def self.sql(name)
-      Norm.quote_ident(name.to_s)
+    def self.sql(*opts)
+      opts.map {|i| Norm.quote_ident(i.to_s)}.join(".")
     end
   end
 
@@ -123,6 +127,40 @@ module Norm::Filter
       s << Norm::Filter.sql(rhs)
       s << ")"
       s
+    end
+  end
+
+  # A context for the Norm::Query#where DSL, and for Norm::Query#join's table
+  # objects.  Any non-lexically bound names hit WhereContext#method_missing,
+  # which checks if it belongs to a column, and if so, constructs a
+  # Norm::Filter::Column.
+  class Table
+    def initialize(query, explicit)
+      @query = query
+      @explicit = explicit
+    end
+
+    # Ensure +args+ and +block+ are both empty.  Assert that a column for the
+    # query this context belongs to by the name +name+ exists, and return a
+    # Norm::Filter::Column for that column.
+    def method_missing(name, *args, &block)
+      if args.length > 0
+        raise ArgumentError, "args not expected in #where subclause"
+      end
+
+      if block
+        raise ArgumentError, "block not expected in #where subclause"
+      end
+
+      unless @query.col_types[name]
+        raise ArgumentError, "unknown column for #{@query.table}: #{name}"
+      end
+
+      if @explicit
+        Column.new(:table => @query.table.to_sym, :name => name).freeze
+      else
+        Column.new(:name => name).freeze
+      end
     end
   end
 end

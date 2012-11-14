@@ -15,7 +15,7 @@ CREATE TABLE "some" (
   id INT,
   value VARCHAR(100));
 
-INSERT INTO "some" (id, value) VALUES (1, 'Bah'), (2, 'Hah'), (3, 'Pah');
+INSERT INTO "some" (id, value) VALUES (1, 'Bah'), (2, 'Hah'), (3, 'Hello, Dave.');
 
 DROP TABLE IF EXISTS typey;
 CREATE TABLE typey (

@@ -14,6 +14,12 @@ describe Norm::Query do
     its(:table) { should be_frozen }
     its(:options) { should be_frozen }
     its(:col_types) { should be_frozen }
+
+    context "no such table" do
+      it { expect { Norm::Query.new(Norm.instance_variable_get("@conn"),
+                                    "nonextant")
+                  }.to raise_exception(ArgumentError) }
+    end
   end
 
   describe "#with_options" do
@@ -102,6 +108,28 @@ describe Norm::Query do
     end
   end
 
+  describe "#join" do
+    subject { some.join(:one) { one.value == some.value } }
+
+    its(:options) do
+      should include(:join => [:one,
+                               [:Binary,
+                                '=',
+                                [:Column, :one, :value],
+                                [:Column, :some, :value]]])
+    end
+
+    its(:sql) { should eq(
+      'SELECT ' +
+      '"some"."id" "some.id", ' +
+      '"some"."value" "some.value", ' +
+      '"one"."id" "one.id", ' +
+      '"one"."value" "one.value" ' +
+      'FROM "some" ' +
+      'INNER JOIN "one" ' +
+      'ON ("one"."value" = "some"."value")') }
+  end
+
   describe "#select!" do
     context "use of #sql" do
       # HACK: construct empty manually, otherwise it'll try to look up column
@@ -142,7 +170,7 @@ describe Norm::Query do
 
       its([0]) { should eq({:id => 1, :value => "Bah"}) }
       its([1]) { should eq({:id => 2, :value => "Hah"}) }
-      its([2]) { should eq({:id => 3, :value => "Pah"}) }
+      its([2]) { should eq({:id => 3, :value => "Hello, Dave."}) }
     end
   end
 

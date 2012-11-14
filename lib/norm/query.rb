@@ -30,6 +30,10 @@ class Norm::Query
           'SELECT column_name, data_type FROM information_schema.columns ' \
           'WHERE table_name=$1',
           [@table]) do |pg_result|
+        if pg_result.num_tuples.zero?
+          raise ArgumentError, "invalid or blank table #@table"
+        end
+
         pg_result.each do |tuple|
           col_types[tuple["column_name"].to_sym] = tuple["data_type"]
         end
@@ -91,34 +95,6 @@ class Norm::Query
     with_options(:returning => columns)
   end
 
-  # A context for the #where DSL.  Any non-lexically bound names hit
-  # WhereContext#method_missing, which checks if it belongs to a column, and if
-  # so, constructs a Norm::Filter::Column.
-  class WhereContext
-    def initialize(query)
-      @query = query
-    end
-
-    # Ensure +args+ and +block+ are both empty.  Assert that a column for the
-    # query this context belongs to by the name +name+ exists, and return a
-    # Norm::Filter::Column for that column.
-    def method_missing(name, *args, &block)
-      if args.length > 0
-        raise ArgumentError, "args not expected in #where subclause"
-      end
-
-      if block
-        raise ArgumentError, "block not expected in #where subclause"
-      end
-
-      unless @query.col_types[name]
-        raise ArgumentError, "unknown column for #{@query.table} #{name}"
-      end
-
-      Norm::Filter::Column.new(:name => name).freeze
-    end
-  end
-
   # Filters results based on the conditions specified in +block+.
   #
   # +block+ has available in context the column names of the table being
@@ -129,9 +105,35 @@ class Norm::Query
   # to combine them.  The return value of the block should be the full desired
   # filter.
   def where(&block)
-    context = WhereContext.new(self)
+    context = Norm::Filter::Table.new(self, false).freeze
 
     with_options(:where => context.instance_exec(&block).finalize)
+  end
+
+  # A context for the #join DSL.  Any non-lexically bound names hit
+  # JoinContext#method_missing, which constructs a Norm::Filter::Table for the
+  # table with that name.
+  class JoinContext
+    # Ensure +args+ and +block+ are both empty.  Creates a Norm::Query for the
+    # name invoked, which ensures such a table exists.  Assuming it exists, a
+    # Norm::Filter::Table for that query is constructed.
+    def method_missing(name, *args, &block)
+      if args.length > 0
+        raise ArgumentError, "args not expected in #where subclause"
+      end
+
+      if block
+        raise ArgumentError, "block not expected in #where subclause"
+      end
+
+      Norm::Filter::Table.new(Norm.query(name), true).freeze
+    end
+  end
+
+  def join(target, &block)
+    context = JoinContext.new
+
+    with_options(:join => [target, context.instance_exec(&block).finalize])
   end
 
   # Constructs the SQL for this query.
@@ -203,13 +205,29 @@ class Norm::Query
     else
       s = "SELECT "
 
+      join = options.delete(:join)
+
       if only = options.delete(:only)
         s << only.map {|c| Norm.quote_ident(c)}.join(", ")
+      elsif join
+        # XXX OMG
+        s << (@col_types.keys.sort.map {|c|
+          "#{Norm.quote_ident(@table)}.#{Norm.quote_ident(c)} " +
+          "#{Norm.quote_ident("#{@table}.#{c}")}"
+        } + Norm.query(join[0]).col_types.keys.sort.map {|c|
+          "#{Norm.quote_ident(join[0])}.#{Norm.quote_ident(c)} " +
+          "#{Norm.quote_ident("#{join[0]}.#{c}")}"
+        }).join(", ")
       else
         s << "*"
       end
 
       s << " FROM #{Norm.quote_ident(@table)}"
+
+      if join
+        s << " INNER JOIN #{Norm.quote_ident(join[0])} ON "
+        s << Norm::Filter.sql(join[1])
+      end
 
       if where = options.delete(:where)
         s << " WHERE "
