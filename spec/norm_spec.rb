@@ -111,11 +111,14 @@ describe Norm do
     before { to.should_receive(:col_types).
                  and_return({:b => "character varying"}) }
 
-    it do
-      Norm.normalize_join_result(
-        {"c1" => "1", "c2" => "2"}, from, to).should eq({:from => {:a => 1},
-                                                         :to => {:b => "2"}})
-    end
+    it { Norm.normalize_join_result(
+             {"c1" => "1", "c2" => "2"}, from, to).
+             should eq({:from => {:a => 1},
+                        :to => {:b => "2"}}) }
+
+    it { Norm.normalize_join_result(
+             {"c1" => "1"}, from, to).
+             should eq({:from => {:a => 1}}) }
   end
 
   describe ".convert_type" do

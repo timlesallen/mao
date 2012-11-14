@@ -72,6 +72,7 @@ describe Norm::Query do
                             'FROM "some" ' +
                             'INNER JOIN "one" ' +
                             'ON ("one"."value" = "some"."value")' }
+      its(:select!) { should eq [{:one => {:id => 42}}] }
 
       context "before #join" do
         it { expect { some.only(:some => [:id])
