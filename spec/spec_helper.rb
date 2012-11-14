@@ -7,7 +7,7 @@ end
 
 def prepare_spec
   `psql norm_testing -f #{relative_to_spec("fixture.sql")}`
-  Norm.connect!
+  Norm.connect!(:dbname => 'norm_testing')
 end
 
 # vim: set sw=2 cc=80 et:

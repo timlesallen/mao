@@ -4,9 +4,10 @@ require 'pg'
 module Norm
   require 'norm/query'
 
-  # Connect to the database.
-  def self.connect!
-    @conn ||= PG.connect(:dbname => 'norm_testing')
+  # Connect to the database.  +options+ is currently the straight Postgres gem
+  # options.
+  def self.connect!(options)
+    @conn ||= PG.connect(options)
   end
 
   # Disconnect from the database.

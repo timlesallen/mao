@@ -4,9 +4,10 @@ describe Norm do
   before { prepare_spec }
 
   describe ".connect!" do
-    before { PG.should_receive(:connect) }
+    let(:options) { double("options") }
+    before { PG.should_receive(:connect).with(options) }
     before { Norm.disconnect! rescue false }
-    it { Norm.connect! }
+    it { Norm.connect!(options) }
   end
 
   describe ".disconnect!" do
