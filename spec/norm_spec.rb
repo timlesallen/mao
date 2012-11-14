@@ -77,22 +77,18 @@ describe Norm do
     end
 
     context "success" do
-      before { PG::Connection.any_instance.should_receive(:exec).
-                   with("BEGIN") }
+      before { Norm.should_receive(:sql).with("BEGIN") }
       before { Norm.should_receive(:sql).with(:some_sql).and_return :ok }
-      before { PG::Connection.any_instance.should_receive(:exec).
-                   with("COMMIT") }
+      before { Norm.should_receive(:sql).with("COMMIT") }
       it { Norm.transaction { Norm.sql(:some_sql) }.
                should eq :ok }
     end
 
     context "failure" do
-      before { PG::Connection.any_instance.should_receive(:exec).
-                   with("BEGIN") }
+      before { Norm.should_receive(:sql).with("BEGIN") }
       before { Norm.should_receive(:sql).with(:some_sql).
                    and_raise(Exception.new) }
-      before { PG::Connection.any_instance.should_receive(:exec).
-                   with("ROLLBACK") }
+      before { Norm.should_receive(:sql).with("ROLLBACK") }
       it { expect { Norm.transaction { Norm.sql(:some_sql) }
                   }.to raise_exception }
     end

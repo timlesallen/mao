@@ -9,15 +9,14 @@ describe Norm::Query do
   let(:autoid) { Norm.query(:autoid) }
 
   describe ".new" do
-    subject { Norm::Query.new(double("conn"), "table", {}, {}) }
+    subject { Norm::Query.new("table", {}, {}) }
 
     its(:table) { should be_frozen }
     its(:options) { should be_frozen }
     its(:col_types) { should be_frozen }
 
     context "no such table" do
-      it { expect { Norm::Query.new(Norm.instance_variable_get("@conn"),
-                                    "nonextant")
+      it { expect { Norm::Query.new("nonextant")
                   }.to raise_exception(ArgumentError) }
     end
   end
@@ -25,7 +24,6 @@ describe Norm::Query do
   describe "#with_options" do
     subject { one.with_options(:blah => 99) }
 
-    its(:conn) { should be one.conn }
     its(:table) { should be one.table }
     its(:options) { should eq({:blah => 99}) }
   end
@@ -134,8 +132,7 @@ describe Norm::Query do
     context "use of #sql" do
       # HACK: construct empty manually, otherwise it'll try to look up column
       # info and ruin our assertions.
-      let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
-                                    "empty",
+      let(:empty) { Norm::Query.new("empty",
                                     {},
                                     {}) }
       let(:empty_sure) { double("empty_sure") }
@@ -177,8 +174,7 @@ describe Norm::Query do
   describe "#select_first!" do
     # HACK: construct empty manually, otherwise it'll try to look up column
     # info and ruin our assertions.
-    let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
-                                  "empty",
+    let(:empty) { Norm::Query.new("empty",
                                   {},
                                   {}) }
     before { empty.should_receive(:limit).with(1).and_return(empty) }
@@ -188,8 +184,7 @@ describe Norm::Query do
 
   describe "#update!" do
     context "use of #sql" do
-      let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
-                                    "empty",
+      let(:empty) { Norm::Query.new("empty",
                                     {},
                                     {}) }
       let(:empty_update) { double("empty_update") }
@@ -224,8 +219,7 @@ describe Norm::Query do
 
   describe "#insert!" do
     context "use of #sql" do
-      let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
-                                    "empty",
+      let(:empty) { Norm::Query.new("empty",
                                     {},
                                     {}) }
       let(:empty_insert) { double("empty_insert") }

@@ -16,10 +16,11 @@ module Norm
     @conn = nil
   end
 
-  # Execute the raw SQL +sql+.  The returned object varies depending on the
-  # database vendor.
-  def self.sql(sql, &block)
-    @conn.exec(sql, &block)
+  # Execute the raw SQL +sql+ with positional +args+.  The returned object
+  # varies depending on the database vendor.
+  def self.sql(sql, *args, &block)
+    STDERR.puts "#{sql}#{args ? " " + args.inspect : ""}"
+    @conn.exec(sql, *args, &block)
   end
 
   # Quote +name+ as appropriate for a table or column name in an SQL statement.
@@ -63,18 +64,18 @@ module Norm
   # Returns a new Norm::Query object for +table+.
   def self.query(table)
     @queries ||= {}
-    @queries[table] ||= Query.new(@conn, table.to_s).freeze
+    @queries[table] ||= Query.new(table.to_s).freeze
   end
 
   def self.transaction(&block)
-    @conn.exec("BEGIN")
+    sql("BEGIN")
     begin
       r = block.call
     rescue Exception
-      @conn.exec("ROLLBACK")
+      sql("ROLLBACK")
       raise
     end
-    @conn.exec("COMMIT")
+    sql("COMMIT")
     r
   end
 

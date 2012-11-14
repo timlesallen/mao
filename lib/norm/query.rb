@@ -21,12 +21,12 @@ class Norm::Query
     Raw.new(text).freeze
   end
 
-  def initialize(conn, table, options={}, col_types=nil)
-    @conn, @table, @options = conn, table.freeze, options.freeze
+  def initialize(table, options={}, col_types=nil)
+    @table, @options = table.freeze, options.freeze
 
     if !col_types
       col_types = {}
-      @conn.exec(
+      Norm.sql(
           'SELECT column_name, data_type FROM information_schema.columns ' \
           'WHERE table_name=$1',
           [@table]) do |pg_result|
@@ -43,7 +43,6 @@ class Norm::Query
     @col_types = col_types.freeze
   end
 
-  attr_reader :conn
   attr_reader :table
   attr_reader :options
   attr_reader :col_types
@@ -51,7 +50,7 @@ class Norm::Query
   # Returns a new Norm::Query with +options+ merged into the options of this
   # object.
   def with_options(options)
-    self.class.new(@conn, @table, @options.merge(options), @col_types).freeze
+    self.class.new(@table, @options.merge(options), @col_types).freeze
   end
 
   # Restricts the query to at most +n+ results.
@@ -251,7 +250,7 @@ class Norm::Query
   # Executes the constructed query and returns an Array of Hashes of results.
   def select!
     # Ensure we can never be destructive by nilifying :update.
-    @conn.exec(with_options(:update => nil).sql) do |pg_result|
+    Norm.sql(with_options(:update => nil).sql) do |pg_result|
       pg_result.map {|result| Norm.normalize_result(result, @col_types)}
     end
   end
@@ -264,7 +263,7 @@ class Norm::Query
   # Executes the changes in Hash +changes+ to the rows matching this object,
   # returning the number of affected rows.
   def update!(changes)
-    @conn.exec(with_options(:update => changes).sql) do |pg_result|
+    Norm.sql(with_options(:update => changes).sql) do |pg_result|
       pg_result.cmd_tuples
     end
   end
@@ -273,7 +272,7 @@ class Norm::Query
   # query.  Returns the number of inserted rows, unless #returning was called,
   # in which case the calculated values from the INSERT are returned.
   def insert!(*rows)
-    @conn.exec(with_options(:insert => rows.flatten).sql) do |pg_result|
+    Norm.sql(with_options(:insert => rows.flatten).sql) do |pg_result|
       if @options[:returning]
         pg_result.map {|result| Norm.normalize_result(result, @col_types)}
       else
