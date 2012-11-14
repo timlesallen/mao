@@ -62,6 +62,21 @@ class Norm::Query
     with_options(:limit => n.to_i)
   end
 
+  # Returns the query's results sorted by +column+ in +direction+, either :asc
+  # or :desc.
+  def order(column, direction)
+    unless column.is_a?(Symbol) and [:asc, :desc].include?(direction)
+      raise ArgumentError,
+        "#{column.inspect} not a Symbol or " \
+        "#{direction.inspect} not :asc or :desc"
+    end
+
+    check_column(column, @table, @col_types)
+
+    direction = direction == :asc ? "ASC" : "DESC"
+    with_options(:order => [column, direction])
+  end
+
   # Only returns the given +columns+, Symbols (possibly nested in Arrays).
   #
   # If +columns+ is a single argument, and it's a Hash, the keys should be
@@ -287,6 +302,13 @@ class Norm::Query
       if where = options.delete(:where)
         s << " WHERE "
         s << Norm::Filter.sql(where)
+      end
+
+      if order = options.delete(:order)
+        s << " ORDER BY "
+        s << Norm.quote_ident(order[0])
+        s << " "
+        s << order[1]
       end
 
       if limit = options.delete(:limit)

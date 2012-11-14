@@ -43,6 +43,21 @@ describe Norm::Query do
     end
   end
 
+  describe "#order" do
+    let(:asc) { some.order(:id, :asc) }
+    it { asc.options.should include(:order => [:id, 'ASC']) }
+    it { asc.sql.should eq 'SELECT * FROM "some" ORDER BY "id" ASC' }
+
+    let(:desc) { one.order(:value, :desc) }
+    it { desc.options.should include(:order => [:value, 'DESC']) }
+    it { desc.sql.should eq 'SELECT * FROM "one" ORDER BY "value" DESC' }
+
+    it { expect { one.order(:huh, :asc) }.to raise_exception(ArgumentError) }
+    it { expect { one.order(:value) }.to raise_exception(ArgumentError) }
+    it { expect { one.order(:id, 'ASC') }.to raise_exception(ArgumentError) }
+    it { expect { one.order(:id, :xyz) }.to raise_exception(ArgumentError) }
+  end
+
   describe "#only" do
     subject { some.only(:id, [:value]) }
 
