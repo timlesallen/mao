@@ -49,6 +49,7 @@ describe Norm do
       it { Norm.escape_literal([]).should eq %q{(null)} }
       it { Norm.escape_literal([1]).should eq %q{(1)} }
       it { Norm.escape_literal([1, "xzy"]).should eq %q{(1, 'xzy')} }
+      it { Norm.escape_literal(Norm::Query.raw("\n\"'%")).should eq "\n\"'%" }
     end
   end
 

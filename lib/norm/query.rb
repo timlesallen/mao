@@ -7,6 +7,20 @@
 class Norm::Query
   require 'norm/filter'
 
+  # A container for text that should be inserted raw into a query.
+  class Raw
+    def initialize(text)
+      @text = text
+    end
+
+    attr_reader :text
+  end
+
+  # Returns a Norm::Query::Raw with +text+.
+  def self.raw(text)
+    Raw.new(text).freeze
+  end
+
   def initialize(conn, table, options={}, col_types=nil)
     @conn, @table, @options = conn, table.freeze, options.freeze
 

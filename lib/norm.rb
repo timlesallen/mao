@@ -48,6 +48,8 @@ module Norm
       else
         "(#{value.map {|v| escape_literal(v)}.join(", ")})"
       end
+    when Norm::Query::Raw
+      value.text
     else
       raise ArgumentError, "don't know how to escape #{value.class}"
     end
