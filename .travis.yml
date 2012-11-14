@@ -1,3 +1,5 @@
+before_script:
+ - psql -c 'create database norm_testing;' -U postgres
 rvm:
  - 1.9.2
  - 1.9.3
