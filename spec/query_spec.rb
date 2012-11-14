@@ -145,6 +145,11 @@ describe Norm::Query do
       it { empty.update!(:x => :y).should eq :ok }
     end
 
+    context "#sql result" do
+      subject { empty.with_options(:update => {:id => 44}).sql }
+      it { should eq 'UPDATE "empty" SET "id" = 44' }
+    end
+
     context "no matches" do
       it { empty.update!(:value => "y").should eq 0 }
     end
@@ -156,6 +161,39 @@ describe Norm::Query do
 
     context "some matches" do
       it { some.where { id <= 2 }.update!(:value => 'Meh').should eq 2 }
+    end
+  end
+
+  describe "#insert!" do
+    context "use of #sql" do
+      let(:empty) { Norm::Query.new(Norm.instance_variable_get("@conn"),
+                                    "empty",
+                                    {},
+                                    {}) }
+      let(:empty_insert) { double("empty_insert") }
+      let(:empty_sql) { double("empty_sql") }
+      before { empty.should_receive(:with_options).
+                   with(:insert => [{:x => :y}]).
+                   and_return(empty_insert) }
+      before { empty_insert.should_receive(:sql).and_return(empty_sql) }
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with(empty_sql).and_return(:ok) }
+      it { empty.insert!([:x => :y]).should eq :ok }
+    end
+
+    context "#sql result" do
+      context "all columns alike" do
+        subject { empty.with_options(
+                      :insert => [{:id => 44}, {:id => 38}]).sql }
+        it { should eq 'INSERT INTO "empty" ("id") VALUES (44), (38)' }
+      end
+
+      context "not all columns alike" do
+        subject { empty.with_options(
+                      :insert => [{:id => 1}, {:value => 'z', :id => 2}]).sql }
+        it { should eq 'INSERT INTO "empty" ("id", "value") ' +
+                       'VALUES (1, DEFAULT), (2, \'z\')' }
+      end
     end
   end
 

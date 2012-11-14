@@ -128,6 +128,40 @@ class Norm::Query
         s << " WHERE "
         s << Norm::Filter.sql(where)
       end
+    elsif insert = options.delete(:insert)
+      s = "INSERT INTO "
+      s << Norm.quote_ident(@table)
+      s << " ("
+
+      keys = insert.map(&:keys).flatten.uniq.sort
+      s << keys.map do |k|
+        k = k.to_sym
+        unless @col_types[k]
+          raise ArgumentError, "no such column to update: #{k}"
+        end
+
+        Norm.quote_ident(k.to_s)
+      end.join(", ")
+      s << ") VALUES "
+
+      first = true
+      insert.each do |row|
+        if first
+          first = false
+        else
+          s << ", "
+        end
+
+        s << "("
+        s << keys.map {|k|
+          if row.include?(k)
+            Norm.escape_literal(row[k])
+          else
+            "DEFAULT"
+          end
+        }.join(", ")
+        s << ")"
+      end
     else
       s = "SELECT "
 
@@ -175,6 +209,14 @@ class Norm::Query
   # returning the number of affected rows.
   def update!(changes)
     @conn.exec(with_options(:update => changes).sql) do |pg_result|
+      pg_result.cmd_tuples
+    end
+  end
+
+  # Inserts +rows+ into the table.  No other options should be applied to this
+  # query.  Returns the number of inserted rows.
+  def insert!(*rows)
+    @conn.exec(with_options(:insert => rows.flatten).sql) do |pg_result|
       pg_result.cmd_tuples
     end
   end
