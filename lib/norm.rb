@@ -56,6 +56,8 @@ module Norm
       end
     when Norm::Query::Raw
       value.text
+    when Time
+      escape_literal(value.utc.strftime("%Y-%m-%d %H:%M:%S"))
     else
       raise ArgumentError, "don't know how to escape #{value.class}"
     end

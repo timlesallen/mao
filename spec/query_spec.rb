@@ -168,6 +168,45 @@ describe Norm::Query do
     context "with time values" do
       it { times.select_first!.should eq(
                {:id => 1, :time => Time.new(2012, 11, 10, 19, 45, 0, 0)}) }
+
+      it { times.where { time == Time.new(2012, 11, 11, 6, 45, 0, 11 * 3600) }.
+               select!.length.should eq 1 }
+      it { times.where { time == Time.new(2012, 11, 10, 19, 45, 0, 0) }.
+               select!.length.should eq 1 }
+      it { times.where { time == "2012-11-10 19:45:00" }.
+               select!.length.should eq 1 }
+      it { times.where { time == "2012-11-10 19:45:00 Z" }.
+               select!.length.should eq 1 }
+      it { times.where { time == "2012-11-10 19:45:00 +00" }.
+               select!.length.should eq 1 }
+      it { times.where { time == "2012-11-10 19:45:00 +00:00" }.
+               select!.length.should eq 1 }
+      it { times.where { time == "2012-11-10 19:45:00 -00" }.
+               select!.length.should eq 1 }
+      it { times.where { time == "2012-11-10 19:45:00 -00:00" }.
+               select!.length.should eq 1 }
+
+      it { times.where { time < Time.new(2012, 11, 11, 6, 45, 0, 11 * 3600) }.
+               select!.length.should eq 0 }
+      context "surprising results" do
+        # Timestamps are IGNORED for comparisons with "timestamp without time
+        # zone".  See:
+        # http://postgresql.org/docs/9.1/static/datatype-datetime.html#AEN5714
+        it { times.where { time < "2012-11-11 6:45:00 +11" }.
+                 select!.length.should eq 1 }
+        it { times.where { time < "2012-11-11 6:45:00 +1100" }.
+                 select!.length.should eq 1 }
+        it { times.where { time < "2012-11-11 6:45:00 +11:00" }.
+                 select!.length.should eq 1 }
+      end
+      it { times.where { time <= Time.new(2012, 11, 11, 6, 45, 0, 11 * 3600) }.
+               select!.length.should eq 1 }
+      it { times.where { time <= "2012-11-11 6:45:00 +11" }.
+               select!.length.should eq 1 }
+      it { times.where { time <= "2012-11-11 6:45:00 +1100" }.
+               select!.length.should eq 1 }
+      it { times.where { time <= "2012-11-11 6:45:00 +11:00" }.
+               select!.length.should eq 1 }
     end
   end
 
