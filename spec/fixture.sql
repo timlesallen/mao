@@ -22,3 +22,8 @@ CREATE TABLE typey (
   korea BOOLEAN DEFAULT TRUE,
   japan DECIMAL(10,2),
   china TEXT);
+
+DROP TABLE IF EXISTS autoid;
+CREATE TABLE autoid (
+  id SERIAL PRIMARY KEY NOT NULL,
+  value VARCHAR(100));

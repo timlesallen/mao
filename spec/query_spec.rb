@@ -6,6 +6,7 @@ describe Norm::Query do
   let(:empty) { Norm.query(:empty) }
   let(:one) { Norm.query(:one) }
   let(:some) { Norm.query(:some) }
+  let(:autoid) { Norm.query(:autoid) }
 
   describe ".new" do
     subject { Norm::Query.new(double("conn"), "table", {}, {}) }
@@ -39,16 +40,19 @@ describe Norm::Query do
   end
 
   describe "#only" do
-    subject { some.only(["x", "Y"], "z") }
+    subject { some.only("id", ["value"]) }
 
-    its(:options) { should include(:only => %w(x Y z)) }
-    its(:sql) { should eq 'SELECT "x", "Y", "z" FROM "some"' }
+    its(:options) { should include(:only => %w(id value)) }
+    its(:sql) { should eq 'SELECT "id", "value" FROM "some"' }
 
     context "invalid argument" do
       it { expect { some.only(42)
                   }.to raise_exception(ArgumentError) }
 
       it { expect { some.only(nil)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.returning("j")
                   }.to raise_exception(ArgumentError) }
     end
   end
@@ -68,6 +72,26 @@ describe Norm::Query do
 
     context "non-extant column" do
       it { expect { some.where { non_extant_column == 42 }
+                  }.to raise_exception(ArgumentError) }
+    end
+  end
+
+  describe "#returning" do
+    subject { some.returning(["id"], "value").
+                  with_options(:insert => [{"value" => "q"}]) }
+
+    its(:options) { should include(:returning => %w(id value)) }
+    its(:sql) { should eq 'INSERT INTO "some" ("value") ' +
+                          'VALUES (\'q\') RETURNING "id", "value"' }
+
+    context "invalid argument" do
+      it { expect { some.returning(42)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.returning(nil)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.returning("j")
                   }.to raise_exception(ArgumentError) }
     end
   end
@@ -193,6 +217,26 @@ describe Norm::Query do
                       :insert => [{:id => 1}, {:value => 'z', :id => 2}]).sql }
         it { should eq 'INSERT INTO "empty" ("id", "value") ' +
                        'VALUES (1, DEFAULT), (2, \'z\')' }
+      end
+    end
+
+    context "result" do
+      context "number of rows" do
+        it { autoid.insert!(:value => "quox").should eq 1 }
+        it { autoid.insert!({:value => "lol"}, {:value => "x"}).should eq 2 }
+      end
+
+      context "#returning" do
+        it do
+          autoid.returning("id").insert!(:value => "nanana").
+              should eq([{:id => 1}])
+          autoid.returning("id").insert!(:value => "ha").
+              should eq([{:id => 2}])
+          autoid.returning("id").insert!(:value => "bah").
+              should eq([{:id => 3}])
+          autoid.returning("id").insert!({:value => "a"}, {:value => "b"}).
+              should eq([{:id => 4}, {:id => 5}])
+        end
       end
     end
   end

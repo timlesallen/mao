@@ -6,7 +6,7 @@ def relative_to_spec(filename)
 end
 
 def prepare_spec
-  `psql norm_testing -f #{relative_to_spec("fixture.sql")}`
+  `psql norm_testing -f #{relative_to_spec("fixture.sql")} 2>&1 | grep -v ^NOTICE`
   Norm.connect!(:dbname => 'norm_testing')
 end
 

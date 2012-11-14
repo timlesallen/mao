@@ -67,6 +67,9 @@ class Norm::Query
       unless column.is_a? String
         raise ArgumentError, "#{column.inspect} not a String"
       end
+      unless @col_types[column.to_sym]
+        raise ArgumentError, "#{column.inspect} is not a column in this table"
+      end
     end
 
     with_options(:only => columns)
@@ -113,6 +116,22 @@ class Norm::Query
     context = WhereContext.new(self)
 
     with_options(:where => context.instance_exec(&block).finalize)
+  end
+
+  # For INSERTs, returns +columns+ for inserted rows.
+  def returning(*columns)
+    columns = columns.flatten
+
+    columns.each do |column|
+      unless column.is_a? String
+        raise ArgumentError, "#{column.inspect} not a String"
+      end
+      unless @col_types[column.to_sym]
+        raise ArgumentError, "#{column.inspect} is not a column in this table"
+      end
+    end
+
+    with_options(:returning => columns)
   end
 
   # Constructs the SQL for this query.
@@ -176,6 +195,11 @@ class Norm::Query
         }.join(", ")
         s << ")"
       end
+
+      if returning = options.delete(:returning)
+        s << " RETURNING "
+        s << returning.map {|c| Norm.quote_ident(c)}.join(", ")
+      end
     else
       s = "SELECT "
 
@@ -228,10 +252,15 @@ class Norm::Query
   end
 
   # Inserts +rows+ into the table.  No other options should be applied to this
-  # query.  Returns the number of inserted rows.
+  # query.  Returns the number of inserted rows, unless #returning was called,
+  # in which case the calculated values from the INSERT are returned.
   def insert!(*rows)
     @conn.exec(with_options(:insert => rows.flatten).sql) do |pg_result|
-      pg_result.cmd_tuples
+      if @options[:returning]
+        pg_result.map {|result| Norm.normalize_result(result, @col_types)}
+      else
+        pg_result.cmd_tuples
+      end
     end
   end
 end
