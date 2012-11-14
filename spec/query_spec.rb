@@ -175,6 +175,18 @@ describe Norm::Query do
                                           :value => "Hello, Dave."},
                                 :one => {:id => 42,
                                           :value => "Hello, Dave."}}] }
+
+    context "simple Hash joins" do
+      subject { some.join({:one => {:value => :id}}) }
+
+      its(:options) do
+        should include(:join => [:one,
+                                 [:Binary,
+                                  '=',
+                                  [:Column, :some, :value],
+                                  [:Column, :one, :id]]])
+      end
+    end
   end
 
   describe "#select!" do

@@ -170,7 +170,22 @@ class Norm::Query
   # "blah" (which should be either this table, or the +target+ table) equals 3.
   #
   # Boolean operations are then all per #where.
+  #
+  # If +block+ is not specified, +target+ is instead treated as a Hash of the
+  # form {foreign_table => {local_key => foreign_key}}.
   def join(target, &block)
+    if !block
+      local_table = @table
+      foreign_table = target.keys[0]
+      mapping = target[foreign_table]
+      local_key = mapping.keys[0]
+      foreign_key = mapping[local_key]
+      return join(foreign_table) {
+        send(local_table).send(local_key) ==
+          send(foreign_table).send(foreign_key)
+      }
+    end
+
     context = JoinContext.new.freeze
 
     with_options(:join => [target, context.instance_exec(&block).finalize])
