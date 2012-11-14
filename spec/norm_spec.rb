@@ -22,9 +22,17 @@ describe Norm do
   end
 
   describe ".quote_ident" do
-    before { PG::Connection.any_instance.should_receive(:quote_ident).
-                 with("table").and_return(%q{"table"}) }
-    it { Norm.quote_ident("table").should eq %q{"table"} }
+    context "pass-thru" do
+      before { PG::Connection.any_instance.should_receive(:quote_ident).
+                   with("table").and_return(%q{"table"}) }
+      it { Norm.quote_ident("table").should eq %q{"table"} }
+    end
+
+    context "Symbols" do
+      before { PG::Connection.any_instance.should_receive(:quote_ident).
+                   with("table").and_return(%q{"table"}) }
+      it { Norm.quote_ident(:table).should eq %q{"table"} }
+    end
   end
 
   describe ".escape_literal" do

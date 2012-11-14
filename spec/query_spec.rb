@@ -40,9 +40,9 @@ describe Norm::Query do
   end
 
   describe "#only" do
-    subject { some.only("id", ["value"]) }
+    subject { some.only(:id, [:value]) }
 
-    its(:options) { should include(:only => %w(id value)) }
+    its(:options) { should include(:only => [:id, :value]) }
     its(:sql) { should eq 'SELECT "id", "value" FROM "some"' }
 
     context "invalid argument" do
@@ -50,6 +50,32 @@ describe Norm::Query do
                   }.to raise_exception(ArgumentError) }
 
       it { expect { some.only(nil)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.only("id")
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.only(:j)
+                  }.to raise_exception(ArgumentError) }
+    end
+  end
+
+  describe "#returning" do
+    subject { some.returning([:id], :value).
+                  with_options(:insert => [{:value => "q"}]) }
+
+    its(:options) { should include(:returning => [:id, :value]) }
+    its(:sql) { should eq 'INSERT INTO "some" ("value") ' +
+                          'VALUES (\'q\') RETURNING "id", "value"' }
+
+    context "invalid argument" do
+      it { expect { some.returning(42)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.returning(nil)
+                  }.to raise_exception(ArgumentError) }
+
+      it { expect { some.returning("id")
                   }.to raise_exception(ArgumentError) }
 
       it { expect { some.returning("j")
@@ -72,26 +98,6 @@ describe Norm::Query do
 
     context "non-extant column" do
       it { expect { some.where { non_extant_column == 42 }
-                  }.to raise_exception(ArgumentError) }
-    end
-  end
-
-  describe "#returning" do
-    subject { some.returning(["id"], "value").
-                  with_options(:insert => [{"value" => "q"}]) }
-
-    its(:options) { should include(:returning => %w(id value)) }
-    its(:sql) { should eq 'INSERT INTO "some" ("value") ' +
-                          'VALUES (\'q\') RETURNING "id", "value"' }
-
-    context "invalid argument" do
-      it { expect { some.returning(42)
-                  }.to raise_exception(ArgumentError) }
-
-      it { expect { some.returning(nil)
-                  }.to raise_exception(ArgumentError) }
-
-      it { expect { some.returning("j")
                   }.to raise_exception(ArgumentError) }
     end
   end
@@ -228,13 +234,13 @@ describe Norm::Query do
 
       context "#returning" do
         it do
-          autoid.returning("id").insert!(:value => "nanana").
+          autoid.returning(:id).insert!(:value => "nanana").
               should eq([{:id => 1}])
-          autoid.returning("id").insert!(:value => "ha").
+          autoid.returning(:id).insert!(:value => "ha").
               should eq([{:id => 2}])
-          autoid.returning("id").insert!(:value => "bah").
+          autoid.returning(:id).insert!(:value => "bah").
               should eq([{:id => 3}])
-          autoid.returning("id").insert!({:value => "a"}, {:value => "b"}).
+          autoid.returning(:id).insert!({:value => "a"}, {:value => "b"}).
               should eq([{:id => 4}, {:id => 5}])
         end
       end

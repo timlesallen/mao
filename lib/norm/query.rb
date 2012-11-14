@@ -64,15 +64,31 @@ class Norm::Query
     columns = columns.flatten
 
     columns.each do |column|
-      unless column.is_a? String
+      unless column.is_a? Symbol
         raise ArgumentError, "#{column.inspect} not a String"
       end
-      unless @col_types[column.to_sym]
+      unless @col_types[column]
         raise ArgumentError, "#{column.inspect} is not a column in this table"
       end
     end
 
     with_options(:only => columns)
+  end
+
+  # For INSERTs, returns +columns+ for inserted rows.
+  def returning(*columns)
+    columns = columns.flatten
+
+    columns.each do |column|
+      unless column.is_a? Symbol
+        raise ArgumentError, "#{column.inspect} not a String"
+      end
+      unless @col_types[column]
+        raise ArgumentError, "#{column.inspect} is not a column in this table"
+      end
+    end
+
+    with_options(:returning => columns)
   end
 
   # A context for the #where DSL.  Any non-lexically bound names hit
@@ -116,22 +132,6 @@ class Norm::Query
     context = WhereContext.new(self)
 
     with_options(:where => context.instance_exec(&block).finalize)
-  end
-
-  # For INSERTs, returns +columns+ for inserted rows.
-  def returning(*columns)
-    columns = columns.flatten
-
-    columns.each do |column|
-      unless column.is_a? String
-        raise ArgumentError, "#{column.inspect} not a String"
-      end
-      unless @col_types[column.to_sym]
-        raise ArgumentError, "#{column.inspect} is not a column in this table"
-      end
-    end
-
-    with_options(:returning => columns)
   end
 
   # Constructs the SQL for this query.

@@ -24,7 +24,12 @@ module Norm
 
   # Quote +name+ as appropriate for a table or column name in an SQL statement.
   def self.quote_ident(name)
-    @conn.quote_ident(name)
+    case name
+    when Symbol
+      @conn.quote_ident(name.to_s)
+    else
+      @conn.quote_ident(name)
+    end
   end
 
   # Escape +value+ as appropriate for a literal in an SQL statement.
