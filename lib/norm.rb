@@ -64,9 +64,10 @@ module Norm
   # Returns a new Norm::Query object for +table+.
   def self.query(table)
     @queries ||= {}
-    @queries[table] ||= Query.new(table.to_s).freeze
+    @queries[table] ||= Query.new(table).freeze
   end
 
+  # Executes +block+ in a transaction.
   def self.transaction(&block)
     sql("BEGIN")
     begin
@@ -86,6 +87,31 @@ module Norm
       k = k.to_sym
       [k, convert_type(v, col_types[k])]
     }]
+  end
+
+  # Normalizes the Hash +result+ (of Strings to Strings), with the joining
+  # tables of +from_query+ and +to_query+.  Assumes the naming convention for
+  # result keys of Norm::Query#join (see Norm::Query#sql) has been followed.
+  def self.normalize_join_result(result, from_query, to_query)
+    from_table = from_query.table
+    to_table = to_query.table
+    results = {from_table => {}, to_table => {}}
+
+    n = 0
+
+    from_types = from_query.col_types
+    from_types.keys.sort.each do |k|
+      n += 1
+      results[from_table][k] = convert_type(result["c#{n}"], from_types[k])
+    end
+
+    to_types = to_query.col_types
+    to_types.keys.sort.each do |k|
+      n += 1
+      results[to_table][k] = convert_type(result["c#{n}"], to_types[k])
+    end
+
+    results
   end
 
   # Converts +value+ to a native Ruby value, based on the PostgreSQL type

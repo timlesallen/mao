@@ -9,9 +9,9 @@ describe Norm::Query do
   let(:autoid) { Norm.query(:autoid) }
 
   describe ".new" do
-    subject { Norm::Query.new("table", {}, {}) }
+    subject { Norm::Query.new(:table, {}, {}) }
 
-    its(:table) { should be_frozen }
+    its(:table) { should be_an_instance_of Symbol }
     its(:options) { should be_frozen }
     its(:col_types) { should be_frozen }
 
@@ -119,13 +119,18 @@ describe Norm::Query do
 
     its(:sql) { should eq(
       'SELECT ' +
-      '"some"."id" "some.id", ' +
-      '"some"."value" "some.value", ' +
-      '"one"."id" "one.id", ' +
-      '"one"."value" "one.value" ' +
+      '"some"."id" "c1", ' +
+      '"some"."value" "c2", ' +
+      '"one"."id" "c3", ' +
+      '"one"."value" "c4" ' +
       'FROM "some" ' +
       'INNER JOIN "one" ' +
       'ON ("one"."value" = "some"."value")') }
+
+    its(:select!) { should eq [{:some => {:id => 3,
+                                          :value => "Hello, Dave."},
+                                :one => {:id => 42,
+                                          :value => "Hello, Dave."}}] }
   end
 
   describe "#select!" do

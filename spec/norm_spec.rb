@@ -101,6 +101,23 @@ describe Norm do
              should eq({:x => "q"}) }
   end
 
+  describe ".normalize_join_result" do
+    let(:from) { double("from") }
+    let(:to) { double("to") }
+
+    before { from.should_receive(:table).and_return(:from) }
+    before { from.should_receive(:col_types).and_return({:a => "integer"}) }
+    before { to.should_receive(:table).and_return(:to) }
+    before { to.should_receive(:col_types).
+                 and_return({:b => "character varying"}) }
+
+    it do
+      Norm.normalize_join_result(
+        {"c1" => "1", "c2" => "2"}, from, to).should eq({:from => {:a => 1},
+                                                         :to => {:b => "2"}})
+    end
+  end
+
   describe ".convert_type" do
     context "integers" do
       it { Norm.convert_type("42", "integer").should eq 42 }

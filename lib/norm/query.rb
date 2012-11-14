@@ -22,14 +22,14 @@ class Norm::Query
   end
 
   def initialize(table, options={}, col_types=nil)
-    @table, @options = table.freeze, options.freeze
+    @table, @options = table.to_sym, options.freeze
 
     if !col_types
       col_types = {}
       Norm.sql(
           'SELECT column_name, data_type FROM information_schema.columns ' \
           'WHERE table_name=$1',
-          [@table]) do |pg_result|
+          [@table.to_s]) do |pg_result|
         if pg_result.num_tuples.zero?
           raise ArgumentError, "invalid or blank table #@table"
         end
@@ -219,13 +219,15 @@ class Norm::Query
       if only = options.delete(:only)
         s << only.map {|c| Norm.quote_ident(c)}.join(", ")
       elsif join
-        # XXX OMG
+        n = 0
         s << (@col_types.keys.sort.map {|c|
+          n += 1
           "#{Norm.quote_ident(@table)}.#{Norm.quote_ident(c)} " +
-          "#{Norm.quote_ident("#{@table}.#{c}")}"
+          "#{Norm.quote_ident("c#{n}")}"
         } + Norm.query(join[0]).col_types.keys.sort.map {|c|
+          n += 1
           "#{Norm.quote_ident(join[0])}.#{Norm.quote_ident(c)} " +
-          "#{Norm.quote_ident("#{join[0]}.#{c}")}"
+          "#{Norm.quote_ident("c#{n}")}"
         }).join(", ")
       else
         s << "*"
@@ -261,7 +263,14 @@ class Norm::Query
   def select!
     # Ensure we can never be destructive by nilifying :update.
     Norm.sql(with_options(:update => nil).sql) do |pg_result|
-      pg_result.map {|result| Norm.normalize_result(result, @col_types)}
+      if @options[:join]
+        other = Norm.query(@options[:join][0])
+        pg_result.map {|result|
+          Norm.normalize_join_result(result, self, other)
+        }
+      else
+        pg_result.map {|result| Norm.normalize_result(result, @col_types)}
+      end
     end
   end
 
