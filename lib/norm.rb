@@ -61,6 +61,18 @@ module Norm
     @queries[table] ||= Query.new(@conn, table.to_s).freeze
   end
 
+  def self.transaction(&block)
+    @conn.exec("BEGIN")
+    begin
+      r = block.call
+    rescue Exception
+      @conn.exec("ROLLBACK")
+      raise
+    end
+    @conn.exec("COMMIT")
+    r
+  end
+
   # Normalizes the Hash +result+ (of Strings to Strings), with +col_types+
   # specifying Symbol column names to String PostgreSQL types.
   def self.normalize_result(result, col_types)

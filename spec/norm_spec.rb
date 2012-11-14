@@ -59,6 +59,37 @@ describe Norm do
     it { should be_frozen }
   end
 
+  describe ".transaction" do
+    context "empty" do
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with("BEGIN") }
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with("COMMIT") }
+      it { Norm.transaction {} }
+    end
+
+    context "success" do
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with("BEGIN") }
+      before { Norm.should_receive(:sql).with(:some_sql).and_return :ok }
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with("COMMIT") }
+      it { Norm.transaction { Norm.sql(:some_sql) }.
+               should eq :ok }
+    end
+
+    context "failure" do
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with("BEGIN") }
+      before { Norm.should_receive(:sql).with(:some_sql).
+                   and_raise(Exception.new) }
+      before { PG::Connection.any_instance.should_receive(:exec).
+                   with("ROLLBACK") }
+      it { expect { Norm.transaction { Norm.sql(:some_sql) }
+                  }.to raise_exception }
+    end
+  end
+
   describe ".normalize_result" do
     before { Norm.should_receive(:convert_type).
                  with("y", "zzz").and_return("q") }
