@@ -1,4 +1,4 @@
-module Norm
+module Mao
   VERSION = "0.0.3"
 end
 

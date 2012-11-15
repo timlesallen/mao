@@ -4,8 +4,8 @@
 # All "state" about the query itself is deliberately stored in a simple Hash,
 # @options, to provide transparency and ensure simplicity of the resulting
 # design.
-class Norm::Query
-  require 'norm/filter'
+class Mao::Query
+  require 'mao/filter'
 
   # A container for text that should be inserted raw into a query.
   class Raw
@@ -16,7 +16,7 @@ class Norm::Query
     attr_reader :text
   end
 
-  # Returns a Norm::Query::Raw with +text+.
+  # Returns a Mao::Query::Raw with +text+.
   def self.raw(text)
     Raw.new(text).freeze
   end
@@ -26,7 +26,7 @@ class Norm::Query
 
     if !col_types
       col_types = {}
-      Norm.sql(
+      Mao.sql(
           'SELECT column_name, data_type FROM information_schema.columns ' \
           'WHERE table_name=$1',
           [@table.to_s]) do |pg_result|
@@ -47,7 +47,7 @@ class Norm::Query
   attr_reader :options
   attr_reader :col_types
 
-  # Returns a new Norm::Query with +options+ merged into the options of this
+  # Returns a new Mao::Query with +options+ merged into the options of this
   # object.
   def with_options(options)
     self.class.new(@table, @options.merge(options), @col_types).freeze
@@ -91,7 +91,7 @@ class Norm::Query
         raise ArgumentError, "#only with a Hash must be used only after #join"
       end
 
-      other = Norm.query(@options[:join][0])
+      other = Mao.query(@options[:join][0])
       columns = columns[0]
       columns.each do |table, table_columns|
         unless table_columns.is_a? Array
@@ -131,12 +131,12 @@ class Norm::Query
   end
 
   # A context for the #join DSL.  Any non-lexically bound names hit
-  # JoinContext#method_missing, which constructs a Norm::Filter::Table for the
+  # JoinContext#method_missing, which constructs a Mao::Filter::Table for the
   # table with that name.
   class JoinContext
-    # Ensure +args+ and +block+ are both empty.  Creates a Norm::Query for the
+    # Ensure +args+ and +block+ are both empty.  Creates a Mao::Query for the
     # name invoked, which ensures such a table exists.  Assuming it exists, a
-    # Norm::Filter::Table for that query is constructed.
+    # Mao::Filter::Table for that query is constructed.
     def method_missing(name, *args, &block)
       if args.length > 0
         raise ArgumentError, "args not expected in #where subclause"
@@ -146,7 +146,7 @@ class Norm::Query
         raise ArgumentError, "block not expected in #where subclause"
       end
 
-      Norm::Filter::Table.new(Norm.query(name), true).freeze
+      Mao::Filter::Table.new(Mao.query(name), true).freeze
     end
   end
 
@@ -162,14 +162,14 @@ class Norm::Query
   # Once you have a column, use regular operators to construct tests, e.g. "x
   # == 3" will filter where the column "x" has value 3.
   #
-  # Boolean operations on columns return Norm::Filter objects; use #and and #or
+  # Boolean operations on columns return Mao::Filter objects; use #and and #or
   # to combine them.  The return value of the block should be the full desired
   # filter.
   def where(&block)
     if @options[:join]
       context = JoinContext.new.freeze
     else
-      context = Norm::Filter::Table.new(self, false).freeze
+      context = Mao::Filter::Table.new(self, false).freeze
     end
 
     with_options(:where => context.instance_exec(&block).finalize)
@@ -213,7 +213,7 @@ class Norm::Query
 
     if update = options.delete(:update)
       s = "UPDATE "
-      s << Norm.quote_ident(@table)
+      s << Mao.quote_ident(@table)
       s << " SET "
 
       if update.length == 0
@@ -223,22 +223,22 @@ class Norm::Query
       s << update.map do |column, value|
         check_column(column, @table, @col_types)
 
-        "#{Norm.quote_ident(column)} = #{Norm.escape_literal(value)}"
+        "#{Mao.quote_ident(column)} = #{Mao.escape_literal(value)}"
       end.join(", ")
 
       if where = options.delete(:where)
         s << " WHERE "
-        s << Norm::Filter.sql(where)
+        s << Mao::Filter.sql(where)
       end
     elsif insert = options.delete(:insert)
       s = "INSERT INTO "
-      s << Norm.quote_ident(@table)
+      s << Mao.quote_ident(@table)
       s << " ("
 
       keys = insert.map(&:keys).flatten.uniq.sort
       s << keys.map do |column|
         check_column(column, @table, @col_types)
-        Norm.quote_ident(column)
+        Mao.quote_ident(column)
       end.join(", ")
       s << ") VALUES "
 
@@ -253,7 +253,7 @@ class Norm::Query
         s << "("
         s << keys.map {|k|
           if row.include?(k)
-            Norm.escape_literal(row[k])
+            Mao.escape_literal(row[k])
           else
             "DEFAULT"
           end
@@ -263,7 +263,7 @@ class Norm::Query
 
       if returning = options.delete(:returning)
         s << " RETURNING "
-        s << returning.map {|c| Norm.quote_ident(c)}.join(", ")
+        s << returning.map {|c| Mao.quote_ident(c)}.join(", ")
       end
     else
       s = "SELECT "
@@ -276,37 +276,37 @@ class Norm::Query
         s << (@col_types.keys.sort.map {|c|
           n += 1
           if !only or (only[@table] and only[@table].include?(c))
-            "#{Norm.quote_ident(@table)}.#{Norm.quote_ident(c)} " +
-            "#{Norm.quote_ident("c#{n}")}"
+            "#{Mao.quote_ident(@table)}.#{Mao.quote_ident(c)} " +
+            "#{Mao.quote_ident("c#{n}")}"
           end
-        } + Norm.query(join[0]).col_types.keys.sort.map {|c|
+        } + Mao.query(join[0]).col_types.keys.sort.map {|c|
           n += 1
           if !only or (only[join[0]] and only[join[0]].include?(c))
-            "#{Norm.quote_ident(join[0])}.#{Norm.quote_ident(c)} " +
-            "#{Norm.quote_ident("c#{n}")}"
+            "#{Mao.quote_ident(join[0])}.#{Mao.quote_ident(c)} " +
+            "#{Mao.quote_ident("c#{n}")}"
           end
         }).reject(&:nil?).join(", ")
       elsif only
-        s << only.map {|c| Norm.quote_ident(c)}.join(", ")
+        s << only.map {|c| Mao.quote_ident(c)}.join(", ")
       else
         s << "*"
       end
 
-      s << " FROM #{Norm.quote_ident(@table)}"
+      s << " FROM #{Mao.quote_ident(@table)}"
 
       if join
-        s << " INNER JOIN #{Norm.quote_ident(join[0])} ON "
-        s << Norm::Filter.sql(join[1])
+        s << " INNER JOIN #{Mao.quote_ident(join[0])} ON "
+        s << Mao::Filter.sql(join[1])
       end
 
       if where = options.delete(:where)
         s << " WHERE "
-        s << Norm::Filter.sql(where)
+        s << Mao::Filter.sql(where)
       end
 
       if order = options.delete(:order)
         s << " ORDER BY "
-        s << Norm.quote_ident(order[0])
+        s << Mao.quote_ident(order[0])
         s << " "
         s << order[1]
       end
@@ -328,14 +328,14 @@ class Norm::Query
   # Executes the constructed query and returns an Array of Hashes of results.
   def select!
     # Ensure we can never be destructive by nilifying :update.
-    Norm.sql(with_options(:update => nil).sql) do |pg_result|
+    Mao.sql(with_options(:update => nil).sql) do |pg_result|
       if @options[:join]
-        other = Norm.query(@options[:join][0])
+        other = Mao.query(@options[:join][0])
         pg_result.map {|result|
-          Norm.normalize_join_result(result, self, other)
+          Mao.normalize_join_result(result, self, other)
         }
       else
-        pg_result.map {|result| Norm.normalize_result(result, @col_types)}
+        pg_result.map {|result| Mao.normalize_result(result, @col_types)}
       end
     end
   end
@@ -348,7 +348,7 @@ class Norm::Query
   # Executes the changes in Hash +changes+ to the rows matching this object,
   # returning the number of affected rows.
   def update!(changes)
-    Norm.sql(with_options(:update => changes).sql) do |pg_result|
+    Mao.sql(with_options(:update => changes).sql) do |pg_result|
       pg_result.cmd_tuples
     end
   end
@@ -357,9 +357,9 @@ class Norm::Query
   # query.  Returns the number of inserted rows, unless #returning was called,
   # in which case the calculated values from the INSERT are returned.
   def insert!(*rows)
-    Norm.sql(with_options(:insert => rows.flatten).sql) do |pg_result|
+    Mao.sql(with_options(:insert => rows.flatten).sql) do |pg_result|
       if @options[:returning]
-        pg_result.map {|result| Norm.normalize_result(result, @col_types)}
+        pg_result.map {|result| Mao.normalize_result(result, @col_types)}
       else
         pg_result.cmd_tuples
       end

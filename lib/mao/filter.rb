@@ -1,15 +1,15 @@
 # encoding: utf-8
 
 # A mix-in for any kind of filter in a where clause (vis-à-vis
-# Norm::Query#where).
-module Norm::Filter
-  # If +obj+ is a Norm::Filter, call #finalize on it; otherwise, use
-  # Norm.escape_literal to escape +obj.to_s+.
+# Mao::Query#where).
+module Mao::Filter
+  # If +obj+ is a Mao::Filter, call #finalize on it; otherwise, use
+  # Mao.escape_literal to escape +obj.to_s+.
   def self.finalize_or_literal(obj)
-    if obj.is_a? Norm::Filter
+    if obj.is_a? Mao::Filter
       obj.finalize
     else
-      Norm.escape_literal(obj)
+      Mao.escape_literal(obj)
     end
   end
 
@@ -20,7 +20,7 @@ module Norm::Filter
       finalized
     else
       klass, *args = finalized
-      Norm::Filter.const_get(klass).sql(*args)
+      Mao::Filter.const_get(klass).sql(*args)
     end
   end
 
@@ -33,49 +33,49 @@ module Norm::Filter
   # Returns an AND filter where the current object is the LHS and +rhs+ is the
   # RHS.
   def and(rhs)
-    Norm::Filter::Binary.new(:op => 'AND', :lhs => self, :rhs => rhs).freeze
+    Mao::Filter::Binary.new(:op => 'AND', :lhs => self, :rhs => rhs).freeze
   end
 
   # Returns an OR filter where the current object is the LHS and +rhs+ is the
   # RHS.
   def or(rhs)
-    Norm::Filter::Binary.new(:op => 'OR', :lhs => self, :rhs => rhs).freeze
+    Mao::Filter::Binary.new(:op => 'OR', :lhs => self, :rhs => rhs).freeze
   end
 
   # Returns an equality binary filter where the current object is the LHS and
   # +rhs+ is the RHS.
   def ==(rhs)
-    Norm::Filter::Binary.new(:op => '=', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => '=', :lhs => self, :rhs => rhs)
   end
 
   # Returns an inequality binary filter where the current object is the LHS and
   # +rhs+ is the RHS.
   def !=(rhs)
-    Norm::Filter::Binary.new(:op => '<>', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => '<>', :lhs => self, :rhs => rhs)
   end
 
   # Returns a greater-than binary filter where the current object is the LHS
   # and +rhs+ is the RHS.
   def >(rhs)
-    Norm::Filter::Binary.new(:op => '>', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => '>', :lhs => self, :rhs => rhs)
   end
 
   # Returns a greater-than-or-equal-to binary filter where the current object
   # is the LHS and +rhs+ is the RHS.
   def >=(rhs)
-    Norm::Filter::Binary.new(:op => '>=', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => '>=', :lhs => self, :rhs => rhs)
   end
 
   # Returns a less-than binary filter where the current object is the LHS and
   # +rhs+ is the RHS.
   def <(rhs)
-    Norm::Filter::Binary.new(:op => '<', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => '<', :lhs => self, :rhs => rhs)
   end
 
   # Returns a less-than-or-equal-to binary filter where the current object is
   # the LHS and +rhs+ is the RHS.
   def <=(rhs)
-    Norm::Filter::Binary.new(:op => '<=', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => '<=', :lhs => self, :rhs => rhs)
   end
 
   # Returns a filter where the current object is checked if it IS NULL.
@@ -83,17 +83,17 @@ module Norm::Filter
   # around us.  But it seems a pity to have this be not-quite-like-Ruby.  Would
   # it be better to make #==(nil) map to IS NULL instead of = NULL?
   def null?
-    Norm::Filter::Binary.new(:op => 'IS', :lhs => self, :rhs => nil)
+    Mao::Filter::Binary.new(:op => 'IS', :lhs => self, :rhs => nil)
   end
 
   # Returns a filter where the current object is checked if it is IN +rhs+,
   # typically a list.
   def in(rhs)
-    Norm::Filter::Binary.new(:op => 'IN', :lhs => self, :rhs => rhs)
+    Mao::Filter::Binary.new(:op => 'IN', :lhs => self, :rhs => rhs)
   end
 
   class Column
-    include Norm::Filter
+    include Mao::Filter
 
     def finalize
       if @options[:table]
@@ -104,36 +104,36 @@ module Norm::Filter
     end
 
     def self.sql(*opts)
-      opts.map {|i| Norm.quote_ident(i.to_s)}.join(".")
+      opts.map {|i| Mao.quote_ident(i.to_s)}.join(".")
     end
   end
 
   class Binary
-    include Norm::Filter
+    include Mao::Filter
 
     def finalize
       [:Binary,
        @options[:op],
-       Norm::Filter.finalize_or_literal(@options[:lhs]),
-       Norm::Filter.finalize_or_literal(@options[:rhs])]
+       Mao::Filter.finalize_or_literal(@options[:lhs]),
+       Mao::Filter.finalize_or_literal(@options[:rhs])]
     end
 
     def self.sql(op, lhs, rhs)
       s = "("
-      s << Norm::Filter.sql(lhs)
+      s << Mao::Filter.sql(lhs)
       s << " "
       s << op
       s << " "
-      s << Norm::Filter.sql(rhs)
+      s << Mao::Filter.sql(rhs)
       s << ")"
       s
     end
   end
 
-  # A context for the Norm::Query#where DSL, and for Norm::Query#join's table
+  # A context for the Mao::Query#where DSL, and for Mao::Query#join's table
   # objects.  Any non-lexically bound names hit WhereContext#method_missing,
   # which checks if it belongs to a column, and if so, constructs a
-  # Norm::Filter::Column.
+  # Mao::Filter::Column.
   class Table
     def initialize(query, explicit)
       @query = query
@@ -142,7 +142,7 @@ module Norm::Filter
 
     # Ensure +args+ and +block+ are both empty.  Assert that a column for the
     # query this context belongs to by the name +name+ exists, and return a
-    # Norm::Filter::Column for that column.
+    # Mao::Filter::Column for that column.
     def method_missing(name, *args, &block)
       if args.length > 0
         raise ArgumentError, "args not expected in #where subclause"

@@ -1,9 +1,9 @@
 require 'pg'
 require 'bigdecimal'
 
-# The top-level module to access Norm.
-module Norm
-  require 'norm/query'
+# The top-level module to access Mao.
+module Mao
+  require 'mao/query'
 
   # Connect to the database.  +options+ is currently the straight Postgres gem
   # options.
@@ -58,7 +58,7 @@ module Norm
       else
         "(#{value.map {|v| escape_literal(v)}.join(", ")})"
       end
-    when Norm::Query::Raw
+    when Mao::Query::Raw
       value.text
     when Time
       escape_literal(value.utc.strftime("%Y-%m-%d %H:%M:%S.%6N"))
@@ -67,7 +67,7 @@ module Norm
     end
   end
 
-  # Returns a new Norm::Query object for +table+.
+  # Returns a new Mao::Query object for +table+.
   def self.query(table)
     @queries ||= {}
     @queries[table] ||= Query.new(table).freeze
@@ -81,7 +81,7 @@ module Norm
   #
   # If +block+ executes without an exception, the transaction is committed.
   #
-  # If a Norm::Rollback is raised, the transaction is rolled back, and
+  # If a Mao::Rollback is raised, the transaction is rolled back, and
   # #transaction returns false.
   #
   # If any other Exception is raised, the transaction is rolled back, and the
@@ -120,7 +120,7 @@ module Norm
 
   # Normalizes the Hash +result+ (of Strings to Strings), with the joining
   # tables of +from_query+ and +to_query+.  Assumes the naming convention for
-  # result keys of Norm::Query#join (see Norm::Query#sql) has been followed.
+  # result keys of Mao::Query#join (see Mao::Query#sql) has been followed.
   def self.normalize_join_result(result, from_query, to_query)
     results = {}
     n = 0

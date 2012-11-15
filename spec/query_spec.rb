@@ -1,25 +1,25 @@
 # encoding: utf-8
 require 'spec_helper'
 
-describe Norm::Query do
+describe Mao::Query do
   before { prepare_spec }
 
-  let(:empty) { Norm.query(:empty) }
-  let(:one) { Norm.query(:one) }
-  let(:some) { Norm.query(:some) }
-  let(:typey) { Norm.query(:typey) }
-  let(:autoid) { Norm.query(:autoid) }
-  let(:times) { Norm.query(:times) }
+  let(:empty) { Mao.query(:empty) }
+  let(:one) { Mao.query(:one) }
+  let(:some) { Mao.query(:some) }
+  let(:typey) { Mao.query(:typey) }
+  let(:autoid) { Mao.query(:autoid) }
+  let(:times) { Mao.query(:times) }
 
   describe ".new" do
-    subject { Norm::Query.new(:table, {}, {}) }
+    subject { Mao::Query.new(:table, {}, {}) }
 
     its(:table) { should be_an_instance_of Symbol }
     its(:options) { should be_frozen }
     its(:col_types) { should be_frozen }
 
     context "no such table" do
-      it { expect { Norm::Query.new("nonextant")
+      it { expect { Mao::Query.new("nonextant")
                   }.to raise_exception(ArgumentError) }
     end
   end
@@ -255,7 +255,7 @@ describe Norm::Query do
     context "use of #sql" do
       # HACK: construct empty manually, otherwise it'll try to look up column
       # info and ruin our assertions.
-      let(:empty) { Norm::Query.new("empty",
+      let(:empty) { Mao::Query.new("empty",
                                     {},
                                     {}) }
       let(:empty_sure) { double("empty_sure") }
@@ -311,7 +311,7 @@ describe Norm::Query do
   describe "#select_first!" do
     # HACK: construct empty manually, otherwise it'll try to look up column
     # info and ruin our assertions.
-    let(:empty) { Norm::Query.new("empty",
+    let(:empty) { Mao::Query.new("empty",
                                   {},
                                   {}) }
     before { empty.should_receive(:limit).with(1).and_return(empty) }
@@ -321,7 +321,7 @@ describe Norm::Query do
 
   describe "#update!" do
     context "use of #sql" do
-      let(:empty) { Norm::Query.new("empty",
+      let(:empty) { Mao::Query.new("empty",
                                     {},
                                     {}) }
       let(:empty_update) { double("empty_update") }
@@ -356,7 +356,7 @@ describe Norm::Query do
 
   describe "#insert!" do
     context "use of #sql" do
-      let(:empty) { Norm::Query.new("empty",
+      let(:empty) { Mao::Query.new("empty",
                                     {},
                                     {}) }
       let(:empty_insert) { double("empty_insert") }
@@ -408,7 +408,7 @@ describe Norm::Query do
 
   describe "reconnection" do
     it do
-      Norm.query(:one).select!.should be_an_instance_of Array
+      Mao.query(:one).select!.should be_an_instance_of Array
       pending
     end
   end
