@@ -23,7 +23,6 @@ module Mao
   # Execute the raw SQL +sql+ with positional +args+.  The returned object
   # varies depending on the database vendor.
   def self.sql(sql, *args, &block)
-    STDERR.puts "#{sql}#{args ? " " + args.inspect : ""}"
     @conn.exec(sql, *args, &block)
   end
 
