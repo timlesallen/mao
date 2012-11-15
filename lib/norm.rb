@@ -73,11 +73,29 @@ module Norm
     @queries[table] ||= Query.new(table).freeze
   end
 
+  # When raised in a transaction, causes a rollback without the exception
+  # bubbling.
+  Rollback = Class.new(Exception)
+
   # Executes +block+ in a transaction.
+  #
+  # If +block+ executes without an exception, the transaction is committed.
+  #
+  # If a Norm::Rollback is raised, the transaction is rolled back, and
+  # #transaction returns false.
+  #
+  # If any other Exception is raised, the transaction is rolled back, and the
+  # exception is re-raised.
+  #
+  # Otherwise, the transaction is committed, and the result of +block+ is
+  # returned.
   def self.transaction(&block)
     sql("BEGIN")
     begin
       r = block.call
+    rescue Rollback
+      sql("ROLLBACK")
+      return false
     rescue Exception
       sql("ROLLBACK")
       raise

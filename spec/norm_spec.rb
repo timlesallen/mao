@@ -104,6 +104,15 @@ describe Norm do
       it { expect { Norm.transaction { Norm.sql(:some_sql) }
                   }.to raise_exception }
     end
+
+    context "rollback" do
+      before { Norm.should_receive(:sql).with("BEGIN") }
+      before { Norm.should_receive(:sql).with(:some_sql).
+                   and_raise(Norm::Rollback) }
+      before { Norm.should_receive(:sql).with("ROLLBACK") }
+      it { expect { Norm.transaction { Norm.sql(:some_sql) }
+                  }.to_not raise_exception }
+    end
   end
 
   describe ".normalize_result" do
