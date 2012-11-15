@@ -133,6 +133,7 @@ describe Norm do
 
   describe ".convert_type" do
     context "integers" do
+      it { Norm.convert_type(nil, "integer").should be_nil }
       it { Norm.convert_type("42", "integer").should eq 42 }
       it { Norm.convert_type("42", "smallint").should eq 42 }
       it { Norm.convert_type("42", "bigint").should eq 42 }
@@ -141,16 +142,19 @@ describe Norm do
     end
 
     context "character" do
+      it { Norm.convert_type(nil, "character varying").should be_nil }
       it { Norm.convert_type("blah", "character varying").
                should eq "blah" }
       it { Norm.convert_type("blah", "character varying").encoding.
                should be Encoding::UTF_8 }
 
+      it { Norm.convert_type(nil, "character varying(200)").should be_nil }
       it { Norm.convert_type("blah", "character varying(200)").
                should eq "blah" }
       it { Norm.convert_type("blah", "character varying(200)").encoding.
                should be Encoding::UTF_8 }
 
+      it { Norm.convert_type(nil, "text").should be_nil }
       it { Norm.convert_type("blah", "text").
                should eq "blah" }
       it { Norm.convert_type("blah", "text").encoding.
@@ -158,6 +162,8 @@ describe Norm do
     end
 
     context "dates" do
+      it { Norm.convert_type(nil, "timestamp without time zone").
+               should be_nil }
       # Note: without timezone is assumed to be in UTC.
       it { Norm.convert_type("2012-11-10 19:45:00",
                              "timestamp without time zone").
@@ -165,17 +171,20 @@ describe Norm do
     end
 
     context "booleans" do
+      it { Norm.convert_type(nil, "boolean").should be_nil }
       it { Norm.convert_type("t", "boolean").should eq true }
       it { Norm.convert_type("f", "boolean").should eq false }
     end
 
     context "bytea" do
+      it { Norm.convert_type(nil, "bytea").should be_nil }
       it { Norm.convert_type("\\x5748415400", "bytea").should eq "WHAT\x00" }
       it { Norm.convert_type("\\x5748415400", "bytea").encoding.
                should eq Encoding::ASCII_8BIT }
     end
 
     context "numeric" do
+      it { Norm.convert_type(nil, "numeric").should be_nil }
       it { Norm.convert_type("1234567890123456.789", "numeric").
                should eq BigDecimal.new("1234567890123456.789") }
     end

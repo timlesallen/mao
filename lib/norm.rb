@@ -130,6 +130,8 @@ module Norm
   # Converts +value+ to a native Ruby value, based on the PostgreSQL type
   # +type+.
   def self.convert_type(value, type)
+    return nil if value.nil?
+
     case type
     when "integer", "smallint", "bigint", "serial", "bigserial"
       value.to_i
