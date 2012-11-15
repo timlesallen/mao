@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{A database access layer.  Currently supports PG.}
   gem.homepage      = "https://github.com/unnali/mao" # TBD
 
-  gem.add_dependency('pg')
+  gem.add_dependency('pg', '~> 0.14.0')
   gem.add_development_dependency('rake')
   gem.add_development_dependency('rspec')
 
