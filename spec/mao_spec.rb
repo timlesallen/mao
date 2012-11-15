@@ -52,6 +52,14 @@ describe Mao do
       it { Mao.escape_literal(nil).should eq "null" }
     end
 
+    describe "verify escape_literal-less PG::Connection" do
+      before { PG::Connection.any_instance.should_receive(:respond_to?).
+                   with(:escape_literal).and_return(false) }
+      before { PG::Connection.any_instance.should_receive(:escape_string).
+                   with("xyz'hah").and_return("xyz''hah") }
+      it { Mao.escape_literal("xyz'hah").should eq %q{'xyz''hah'} }
+    end
+
     describe "actual values" do
       it { Mao.escape_literal("table").should eq %q{'table'} }
       it { Mao.escape_literal(42).should eq %q{42} }

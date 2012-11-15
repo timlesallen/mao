@@ -40,7 +40,11 @@ module Mao
   def self.escape_literal(value)
     case value
     when String
-      @conn.escape_literal(value)
+      if @conn.respond_to?(:escape_literal)
+        @conn.escape_literal(value)
+      else
+        "'#{@conn.escape_string(value)}'"
+      end
     when NilClass
       "null"
     when TrueClass
