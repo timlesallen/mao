@@ -1,4 +1,5 @@
 require 'pg'
+require 'bigdecimal'
 
 # The top-level module to access Norm.
 module Norm
@@ -7,7 +8,10 @@ module Norm
   # Connect to the database.  +options+ is currently the straight Postgres gem
   # options.
   def self.connect!(options)
-    @conn ||= PG.connect(options)
+    unless @conn
+      @conn = PG.connect(options)
+      @conn.internal_encoding = Encoding::UTF_8
+    end
   end
 
   # Disconnect from the database.
@@ -129,14 +133,20 @@ module Norm
     case type
     when "integer", "smallint", "bigint", "serial", "bigserial"
       value.to_i
-    when /^character varying/
+    when /^character varying/, "text"
       value
     when "timestamp without time zone"
       # We assume it's in UTC.  (Dangerous?)
       value =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
       Time.new($1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, 0)
+    when "boolean"
+      value == "t"
+    when "bytea"
+      PG::Connection.unescape_bytea(value)
+    when "numeric"
+      BigDecimal.new(value)
     else
-      STDERR.puts "#{self.class.name}: unknown type: #{type}"
+      STDERR.puts "#{self.name}: unknown type: #{type}"
       value
     end
   end

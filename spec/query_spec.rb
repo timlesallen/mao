@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 
 describe Norm::Query do
@@ -6,6 +7,7 @@ describe Norm::Query do
   let(:empty) { Norm.query(:empty) }
   let(:one) { Norm.query(:one) }
   let(:some) { Norm.query(:some) }
+  let(:typey) { Norm.query(:typey) }
   let(:autoid) { Norm.query(:autoid) }
   let(:times) { Norm.query(:times) }
 
@@ -161,8 +163,8 @@ describe Norm::Query do
                             'WHERE ("one"."id" = 42)' }
 
       its(:select!) { should eq(
-                          [{:some => {:id => 3, :value => "Hello, Dave."},
-                            :one => {:id => 42, :value => "Hello, Dave."}}]) }
+                          [{:some => {:id => 3, :value => "你好, Dave."},
+                            :one => {:id => 42, :value => "你好, Dave."}}]) }
     end
 
     context "with time values" do
@@ -232,9 +234,9 @@ describe Norm::Query do
       'ON ("one"."value" = "some"."value")') }
 
     its(:select!) { should eq [{:some => {:id => 3,
-                                          :value => "Hello, Dave."},
+                                          :value => "你好, Dave."},
                                 :one => {:id => 42,
-                                          :value => "Hello, Dave."}}] }
+                                          :value => "你好, Dave."}}] }
 
     context "simple Hash joins" do
       subject { some.join({:one => {:value => :id}}) }
@@ -277,7 +279,7 @@ describe Norm::Query do
 
       it { should be_an_instance_of Array }
       it { should have(1).item }
-      its([0]) { should eq({:id => 42, :value => "Hello, Dave."}) }
+      its([0]) { should eq({:id => 42, :value => "你好, Dave."}) }
     end
 
     context "some results" do
@@ -288,7 +290,21 @@ describe Norm::Query do
 
       its([0]) { should eq({:id => 1, :value => "Bah"}) }
       its([1]) { should eq({:id => 2, :value => "Hah"}) }
-      its([2]) { should eq({:id => 3, :value => "Hello, Dave."}) }
+      its([2]) { should eq({:id => 3, :value => "你好, Dave."}) }
+    end
+
+    context "various types" do
+      subject { typey.select! }
+
+      it { should have(2).items }
+      its([0]) { should eq(
+        {:korea => true,
+         :japan => BigDecimal.new("1234567890123456.789"),
+         :china => "WHAT\x00".force_encoding(Encoding::ASCII_8BIT)}) }
+      its([1]) { should eq(
+        {:korea => false,
+         :japan => BigDecimal.new("-1234567890123456.789"),
+         :china => "HUH\x01\x02".force_encoding(Encoding::ASCII_8BIT)}) }
     end
   end
 

@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 
 describe Norm do
@@ -5,9 +6,12 @@ describe Norm do
 
   describe ".connect!" do
     let(:options) { double("options") }
-    before { PG.should_receive(:connect).with(options) }
+    let(:conn) { double("conn") }
+    before { PG.should_receive(:connect).with(options).and_return(conn) }
+    before { conn.should_receive(:internal_encoding=).with(Encoding::UTF_8) }
     before { Norm.disconnect! rescue false }
     it { Norm.connect!(options) }
+    after { Norm.instance_variable_set("@conn", nil) }
   end
 
   describe ".disconnect!" do
@@ -139,9 +143,18 @@ describe Norm do
     context "character" do
       it { Norm.convert_type("blah", "character varying").
                should eq "blah" }
+      it { Norm.convert_type("blah", "character varying").encoding.
+               should be Encoding::UTF_8 }
 
       it { Norm.convert_type("blah", "character varying(200)").
                should eq "blah" }
+      it { Norm.convert_type("blah", "character varying(200)").encoding.
+               should be Encoding::UTF_8 }
+
+      it { Norm.convert_type("blah", "text").
+               should eq "blah" }
+      it { Norm.convert_type("blah", "text").encoding.
+               should be Encoding::UTF_8 }
     end
 
     context "dates" do
@@ -149,6 +162,22 @@ describe Norm do
       it { Norm.convert_type("2012-11-10 19:45:00",
                              "timestamp without time zone").
                should eq Time.new(2012, 11, 10, 19, 45, 0, 0) }
+    end
+
+    context "booleans" do
+      it { Norm.convert_type("t", "boolean").should eq true }
+      it { Norm.convert_type("f", "boolean").should eq false }
+    end
+
+    context "bytea" do
+      it { Norm.convert_type("\\x5748415400", "bytea").should eq "WHAT\x00" }
+      it { Norm.convert_type("\\x5748415400", "bytea").encoding.
+               should eq Encoding::ASCII_8BIT }
+    end
+
+    context "numeric" do
+      it { Norm.convert_type("1234567890123456.789", "numeric").
+               should eq BigDecimal.new("1234567890123456.789") }
     end
   end
 end
