@@ -1,6 +1,6 @@
-# Norm [![Build Status](https://secure.travis-ci.org/unnali/norm.png)](http://travis-ci.org/unnali/norm)
+# Mao [![Build Status](https://secure.travis-ci.org/unnali/mao.png)](http://travis-ci.org/unnali/mao)
 
-**Norm's not an ORM.**
+**Mao Ain't an ORM.**
 
 ## mission/tenets
 
