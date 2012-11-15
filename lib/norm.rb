@@ -90,6 +90,9 @@ module Norm
   # Otherwise, the transaction is committed, and the result of +block+ is
   # returned.
   def self.transaction(&block)
+    return block.call if @in_transaction
+    @in_transaction = true
+
     sql("BEGIN")
     begin
       r = block.call
@@ -99,6 +102,8 @@ module Norm
     rescue Exception
       sql("ROLLBACK")
       raise
+    ensure
+      @in_transaction = false
     end
     sql("COMMIT")
     r

@@ -113,6 +113,18 @@ describe Norm do
       it { expect { Norm.transaction { Norm.sql(:some_sql) }
                   }.to_not raise_exception }
     end
+
+    context "nested transactions" do
+      # Currently not supported: the inner transactions don't add transactions
+      # at all.
+      before { Norm.should_receive(:sql).with("BEGIN").once }
+      before { Norm.should_receive(:sql).with("ROLLBACK").once }
+
+      it do
+        Norm.transaction { Norm.transaction { raise Norm::Rollback } }.
+            should be_false
+      end
+    end
   end
 
   describe ".normalize_result" do
