@@ -58,6 +58,8 @@ describe Norm do
       it { Norm.escape_literal([1]).should eq %q{(1)} }
       it { Norm.escape_literal([1, "xzy"]).should eq %q{(1, 'xzy')} }
       it { Norm.escape_literal(Norm::Query.raw("\n\"'%")).should eq "\n\"'%" }
+
+      # Times are escaped to UTC always.
       it { Norm.escape_literal(Time.new(2012, 11, 11, 6, 45, 0, 11 * 3600)).
                should eq %q{'2012-11-10 19:45:00'} }
       it { Norm.escape_literal(Time.new(2012, 11, 10, 19, 45, 0, 0)).
