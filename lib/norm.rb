@@ -61,7 +61,7 @@ module Norm
     when Norm::Query::Raw
       value.text
     when Time
-      escape_literal(value.utc.strftime("%Y-%m-%d %H:%M:%S"))
+      escape_literal(value.utc.strftime("%Y-%m-%d %H:%M:%S.%6N"))
     else
       raise ArgumentError, "don't know how to escape #{value.class}"
     end
@@ -139,8 +139,8 @@ module Norm
       value
     when "timestamp without time zone"
       # We assume it's in UTC.  (Dangerous?)
-      value =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
-      Time.new($1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, 0)
+      value =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)$/
+      Time.new($1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_f, 0)
     when "boolean"
       value == "t"
     when "bytea"

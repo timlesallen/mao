@@ -65,9 +65,11 @@ describe Norm do
 
       # Times are escaped to UTC always.
       it { Norm.escape_literal(Time.new(2012, 11, 11, 6, 45, 0, 11 * 3600)).
-               should eq %q{'2012-11-10 19:45:00'} }
+               should eq %q{'2012-11-10 19:45:00.000000'} }
       it { Norm.escape_literal(Time.new(2012, 11, 10, 19, 45, 0, 0)).
-               should eq %q{'2012-11-10 19:45:00'} }
+               should eq %q{'2012-11-10 19:45:00.000000'} }
+      it { Norm.escape_literal(Time.new(2012, 11, 10, 19, 45, 0.1, 0)).
+               should eq %q{'2012-11-10 19:45:00.100000'} }
     end
   end
 
@@ -168,6 +170,9 @@ describe Norm do
       it { Norm.convert_type("2012-11-10 19:45:00",
                              "timestamp without time zone").
                should eq Time.new(2012, 11, 10, 19, 45, 0, 0) }
+      it { Norm.convert_type("2012-11-10 19:45:00.1",
+                             "timestamp without time zone").
+               should eq Time.new(2012, 11, 10, 19, 45, 0.1, 0) }
     end
 
     context "booleans" do
