@@ -1,4 +1,6 @@
+Test that PG::Connection#escape_literal-less Mao.escape_literal works with binary data.
 Specify error handling at all levels.
+Reconnection.
 Joins/eager loads.  What syntax?  How do we prevent unexpected blowouts?
  - no auto subqueries, etc.  Thinner wrapper over SQL than AR.
 
