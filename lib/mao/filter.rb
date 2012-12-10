@@ -24,10 +24,13 @@ module Mao::Filter
     end
   end
 
+  # Initialize a filter object with the given options.  Filters are intended to
+  # be used immutably, and all methods on same return new, immutable filters.
   def initialize(options={})
     @options = options.freeze
   end
 
+  # The options hash for this filter.
   attr_reader :options
 
   # Returns an AND filter where the current object is the LHS and +rhs+ is the
@@ -79,9 +82,9 @@ module Mao::Filter
   end
 
   # Returns a filter where the current object is checked if it IS NULL.
-  # HACK(arlen): ? Calling this "nil?" results in the world crashing down
-  # around us.  But it seems a pity to have this be not-quite-like-Ruby.  Would
-  # it be better to make #==(nil) map to IS NULL instead of = NULL?
+  #   HACK(arlen): ? Calling this "nil?" results in the world crashing down
+  #   around us.  But it seems a pity to have this be not-quite-like-Ruby.
+  #   Would it be better to make #==(nil) map to IS NULL instead of = NULL?
   def null?
     Mao::Filter::Binary.new(:op => 'IS', :lhs => self, :rhs => nil)
   end
@@ -92,9 +95,12 @@ module Mao::Filter
     Mao::Filter::Binary.new(:op => 'IN', :lhs => self, :rhs => rhs)
   end
 
+  # A reference to a column('s value) in a filter.
   class Column
     include Mao::Filter
 
+    # Produces an array which becomes part of the resulting Mao::Query's
+    # options, used by Mao::Query#sql.
     def finalize
       if @options[:table]
         [:Column, @options[:table], @options[:name]]
@@ -103,14 +109,19 @@ module Mao::Filter
       end
     end
 
+    # Used by Mao::Filter.sql to generate the actual SQL for a column
+    # reference.
     def self.sql(*opts)
       opts.map {|i| Mao.quote_ident(i.to_s)}.join(".")
     end
   end
 
+  # A binary operation on two filters.
   class Binary
     include Mao::Filter
 
+    # Produces an array which becomes part of the resulting Mao::Query's
+    # options, used by Mao::Query#sql.
     def finalize
       [:Binary,
        @options[:op],
@@ -118,6 +129,8 @@ module Mao::Filter
        Mao::Filter.finalize_or_literal(@options[:rhs])]
     end
 
+    # Used by Mao::Filter.sql to generate the actual SQL for a column
+    # reference.
     def self.sql(op, lhs, rhs)
       s = "("
       s << Mao::Filter.sql(lhs)
@@ -135,6 +148,9 @@ module Mao::Filter
   # which checks if it belongs to a column, and if so, constructs a
   # Mao::Filter::Column.
   class Table
+    # Constructs a Table; +query+ is the Mao::Query instance, and +explicit+
+    # refers to whether we need to explicitly name tables in the generated SQL.
+    # (e.g. when a JOIN is being performed)
     def initialize(query, explicit)
       @query = query
       @explicit = explicit

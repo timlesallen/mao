@@ -9,10 +9,12 @@ class Mao::Query
 
   # A container for text that should be inserted raw into a query.
   class Raw
+    # Creates the Mao::Query::Raw with SQL +text+.
     def initialize(text)
       @text = text
     end
 
+    # The raw SQL text.
     attr_reader :text
   end
 
@@ -21,6 +23,9 @@ class Mao::Query
     Raw.new(text).freeze
   end
 
+  # Constructs the Query with reference to a table named +table+, and immutable
+  # options hash +options+.  +col_types+ is column information for the table,
+  # usually populated by a prior invocation of Mao::Query.new.
   def initialize(table, options={}, col_types=nil)
     @table, @options = table.to_sym, options.freeze
 
@@ -43,8 +48,14 @@ class Mao::Query
     @col_types = col_types.freeze
   end
 
+  # A symbol of the name of the table this Query points to.
   attr_reader :table
+
+  # The immutable options hash of this Query instance.
   attr_reader :options
+
+  # The cached information about columns and their types for the table being
+  # referred to.
   attr_reader :col_types
 
   # Returns a new Mao::Query with +options+ merged into the options of this
@@ -368,6 +379,8 @@ class Mao::Query
 
   private
 
+  # Checks that +column+ is a valid column reference in +table+, given
+  # +col_types+ for the table.
   def check_column column, table, col_types
     unless column.is_a? Symbol
       raise ArgumentError, "#{column.inspect} not a Symbol"

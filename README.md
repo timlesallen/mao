@@ -4,6 +4,8 @@
 
 ## mission/tenets
 
+1. From the code you have written, it should be sufficiently declarative and
+   map sufficiently predictably to SQL that you can predict the SQL produced.
 
 ## releasing
 
