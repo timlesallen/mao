@@ -7,6 +7,12 @@
 1. From the code you have written, it should be sufficiently declarative and
    map sufficiently predictably to SQL that you can predict the SQL produced.
 
+## documentation
+
+RDoc is available online at
+[rubydoc.info](http://rubydoc.info/gems/mao/0.0.7/frames), or you can try your
+luck with `rake rdoc`.
+
 ## releasing
 
 1. Bump `lib/mao/version.rb` as appropriate.
