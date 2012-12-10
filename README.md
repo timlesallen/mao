@@ -4,6 +4,13 @@
 
 ## mission/tenets
 
+
+## releasing
+
+1. Bump `lib/mao/version.rb` as appropriate.
+2. Commit same.
+3. `rake release`
+
 ## authorship
 
 * [Timothy Leslie Allen](https://github.com/timothyleslieallen).
