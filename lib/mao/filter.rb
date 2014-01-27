@@ -82,7 +82,7 @@ module Mao::Filter
   end
 
   # Returns a filter where the current object is checked if it IS NULL.
-  #   HACK(arlen): ? Calling this "nil?" results in the world crashing down
+  #   HACK(kivikakk): ? Calling this "nil?" results in the world crashing down
   #   around us.  But it seems a pity to have this be not-quite-like-Ruby.
   #   Would it be better to make #==(nil) map to IS NULL instead of = NULL?
   def null?

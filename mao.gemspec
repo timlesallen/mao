@@ -1,8 +1,8 @@
 require File.expand_path('../lib/mao/version', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.authors       = ["Timothy Leslie Allen", "Arlen Christian Mart Cuss"]
-  gem.email         = ["allen.timothy.email@gmail.com", "ar@len.me"]
+  gem.authors       = ["Timothy Leslie Allen", "Yuki Izumi"]
+  gem.email         = ["allen.timothy.email@gmail.com", "rubygems@kivikakk.ee"]
   gem.description   = %q{Mao Ain't an ORM}
   gem.summary       = %q{A database access layer.  Currently supports PG.}
   gem.homepage      = "https://github.com/unnali/mao" # TBD

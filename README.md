@@ -22,7 +22,7 @@ luck with `rake rdoc`.
 ## authorship
 
 * [Timothy Leslie Allen](https://github.com/timothyleslieallen).
-* [Arlen Christian Mart Cuss](https://github.com/unnali).
+* [Yuki Izumi](https://github.com/kivikakk).
 
 ## copyright and licensing
 
