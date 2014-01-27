@@ -1,4 +1,4 @@
-# Mao [![Build Status](https://secure.travis-ci.org/unnali/mao.png)](http://travis-ci.org/unnali/mao) [![Dependency Status](https://gemnasium.com/unnali/mao.png)](https://gemnasium.com/unnali/mao)
+# Mao [![Build Status](https://secure.travis-ci.org/kivikakk/mao.png)](http://travis-ci.org/kivikakk/mao) [![Dependency Status](https://gemnasium.com/kivikakk/mao.png)](https://gemnasium.com/kivikakk/mao)
 
 **Mao Ain't an ORM.**
 
