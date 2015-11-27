@@ -110,7 +110,7 @@ describe Mao do
                    and_raise(Exception.new) }
       before { expect(Mao).to receive(:sql).with("ROLLBACK") }
       it { expect { Mao.transaction { Mao.sql(:some_sql) }
-                  }.to raise_exception }
+                  }.to raise_exception Exception}
     end
 
     context "rollback" do
