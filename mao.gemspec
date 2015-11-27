@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency('pg', '~> 0.18.4')
   gem.add_development_dependency('rake')
-  gem.add_development_dependency('rspec', '~> 2.99')
+  gem.add_development_dependency('rspec', '~> 3.0')
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
