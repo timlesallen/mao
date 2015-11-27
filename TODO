@@ -1,0 +1,10 @@
+Test that PG::Connection#escape_literal-less Mao.escape_literal works with
+binary data.
+Specify error handling at all levels.
+Reconnection.
+
+Do JOINs without all the "c1" "c2" "c3" business; assume (= check we can
+assume) that the primary table's columns come first, and secondary table's
+after; then just pick off the first n cols of a result tuple (where n is number
+of cols in primary table) and assign them to the primary table, and the
+remaining m (where m is no. of cols in secondary) to secondary.
