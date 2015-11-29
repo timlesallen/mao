@@ -5,7 +5,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["allen.timothy.email@gmail.com", "rubygems@kivikakk.ee"]
   gem.description   = %q{Mao Ain't an ORM}
   gem.summary       = %q{A database access layer.  Currently supports PG.}
-  gem.homepage      = "https://github.com/kivikakk/mao"
+  gem.homepage      = "https://github.com/timlesallen/mao"
 
   gem.add_dependency('pg', '~> 0.18.4')
   gem.add_development_dependency('rake')
