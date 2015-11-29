@@ -7,9 +7,9 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{A database access layer.  Currently supports PG.}
   gem.homepage      = "https://github.com/kivikakk/mao"
 
-  gem.add_dependency('pg', '~> 0.14.0')
+  gem.add_dependency('pg', '~> 0.18.4')
   gem.add_development_dependency('rake')
-  gem.add_development_dependency('rspec')
+  gem.add_development_dependency('rspec', '~> 3.0')
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
